@@ -113,7 +113,9 @@ class Sqon {
   public build(): CombinationOperator {
     if (
       this._content.length === 1 &&
-      Object.values(CombinationKeys).includes(this._content[0].op)
+      Object.values(CombinationKeys).includes(
+        (<CombinationOperator>this._content[0]).op,
+      )
     ) {
       return <CombinationOperator>this._content[0];
     } else {
@@ -132,7 +134,7 @@ export const gt = (field: string, value: number) => new Sqon().gt(field, value);
 export const lt = (field: string, value: number) => new Sqon().lt(field, value);
 export const build = () => new Sqon().build();
 
-const SqonBuilder: any = function(sqon?: Sqon | Operator | string) {
+const SqonBuilder: any = function (sqon?: Sqon | Operator | string) {
   return new Sqon(sqon);
 };
 
