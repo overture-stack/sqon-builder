@@ -103,7 +103,7 @@ Example: `sqon.or( sqon.has('name', 'Tim').gt('score', 9000) )`
 
 #### sqon.not(sqon)
 
-Creates a filter that requires that non of its content elements are true.
+Creates a filter that requires that none of its content elements are true.
 
 Note: Arranger should be tested with an array of content in 'not', I can only remember using this with negating individual filters.
 
