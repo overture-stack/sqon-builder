@@ -101,7 +101,7 @@ Creates a filter that requires at least one element of its content to be true.
 
 Example: `sqon.or( sqon.has('name', 'Tim').gt('score', 9000) )`
 
-#### sqon.and(sqon)
+#### sqon.not(sqon)
 
 Creates a filter that requires that non of its content elements are true.
 
