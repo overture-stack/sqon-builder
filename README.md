@@ -1,122 +1,271 @@
 # SQON Builder
 
-## Quick Start Examples
+## How to Use
 
-#### One filter example:
+### Filters
 
+To create a SQON that filters one property by value:
+
+```js
+import SQON from 'sqon-builder';
+
+SQON.in('name', ['Jim', 'Bob']);
 ```
-import sqon from '@joneubank/sqon'
 
-sqon.has('name', 'Tim').build();
+Produces a SQON with the following content:
 
-```
-
-Gives the following JSON object:
-
-```
+```json
 {
   "op": "and",
   "content": [
-    { "op": "in", "content": { "field": "name", "value": "Tim" } }
+    {
+      "op": "in",
+      "content": {
+        "field": "name",
+        "value": ["Jim", "Bob"]
+      }
+    }
   ]
 }
 ```
 
-#### More complicated example
+There are currently 3 filters available (to be expanded to match the full SQON specification):
 
+| **Filter** |     **Value Type**      |                         **Description**                          |
+| :--------: | :---------------------: | :--------------------------------------------------------------: |
+|    `in`    | Array<string \| number> |              field value must be in the given list.              |
+|    `gt`    |         number          | Greater Than - field value must be greater than the given number |
+|    `lt`    |         number          |  Lesser Than - field value must be lesser than the given number  |
+
+A SQON can chain multiple of these filters together into a single SQON that requires all the provided conditions:
+
+```js
+SQON.in('name', ['Jim', 'Bob']).gt('score', 9000).lt('age', 100);
 ```
-sqon.or(
-  sqon.and(
-    sqon.has('status','Approved').gt('age', '21')
-  ).not(
-    sqon.has('name','Tim')
-  )
-).build()
+
+Creates the SQON:
+
+```json
+{
+  "op": "and",
+  "content": [
+    {
+      "op": "in",
+      "content": {
+        "field": "name",
+        "value": ["Jim", "Bob"]
+      }
+    },
+    {
+      "op": "gt",
+      "content": {
+        "field": "score",
+        "value": 9000
+      }
+    },
+    {
+      "op": "lt",
+      "content": {
+        "field": "age",
+        "value": 100
+      }
+    }
+  ]
+}
+```
+
+### Combining Multiple Filters
+
+Every SQON can be combined with other SQONs through the boolean combinations `and`, `or`, and `not`:
+
+```js
+const nameFilter = SQON.in('name', ['Jim', 'Bob']);
+const scoreFilter = SQON.gt('score', 9000);
+
+SQON.or(nameFilter, scoreFilter);
 ```
 
 Result:
 
-```
+```json
 {
   "op": "or",
   "content": [
     {
       "op": "and",
       "content": [
-        { "op": "in", "content": { "field": "status", "value": "Approved" } },
-        { "op": "gt", "content": { "field": "age", "value": "21" } }
+        {
+          "op": "in",
+          "content": {
+            "field": "name",
+            "value": ["Jim", "Bob"]
+          }
+        }
       ]
     },
     {
-      "op": "not",
+      "op": "and",
       "content": [
-        { "op": "in", "content": { "field": "name", "value": "Tim" } }
+        {
+          "op": "gt",
+          "content": {
+            "field": "score",
+            "value": 9000
+          }
+        }
       ]
     }
   ]
 }
 ```
 
+A SQON can also chain these operations like with filters to combine with other SQONs:
+
+```js
+const name = SQON.in('name', ['Jim', 'Bob']);
+const denied = SQON.in('status', ['DENIED']);
+const score = SQON.gt('score', 9000);
+const age = SQON.lt('age', 100);
+
+score.or(age).and(name).not(denied);
+```
+
+This is equivalent to:
+
+```js
+SQON.not([denied, SQON.and([name, SQON.or([age, score])])]);
+```
+
+Result:
+
+```json
+{
+  "op": "and",
+  "content": [
+    {
+      "op": "or",
+      "content": [
+        {
+          "op": "and",
+          "content": [
+            {
+              "op": "gt",
+              "content": {
+                "field": "score",
+                "value": 9000
+              }
+            }
+          ]
+        },
+        {
+          "op": "and",
+          "content": [
+            {
+              "op": "lt",
+              "content": {
+                "field": "age",
+                "value": 100
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "op": "in",
+      "content": {
+        "field": "name",
+        "value": ["Jim", "Bob"]
+      }
+    },
+    {
+      "op": "not",
+      "content": [
+        {
+          "op": "and",
+          "content": [
+            {
+              "op": "in",
+              "content": {
+                "field": "status",
+                "value": ["DENIED"]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### String Output
+
+The SQON data object can be passed directly to most network request libraries, but if a string is needed there is a convenience method `toString()`.
+
+```js
+SQON.in('name', ['Jim', 'Bob']).toString();
+// {"op":"and","content":[{"op":"in","content":{"field":"name","value":["Jim","Bob"]}}]}
+```
+
+This is just a shortcut to running `JSON.stringify(someSqon)`.
+
 ## API
 
-This library exports a SQON builder utility. Invoking a method on the sqon builder will create a new SQON object with the desired filter. Operators can be chained, resulting in an array of filters.
+### Filters
 
-SQON has two types of operators - Field and Combination:
-
-    Field operators are filters applied to specific fields: `has`, `gt` (greater than), and `lt` (lesser than). They take as arguments the field name and the value(s).
-
-    Combination operators combine lists of other operators: `and`, `or`, and `not`. They take another sqon or instance of this sqon builder as input. The sqons in the input can be any combination of operators (field or combination).
-
-### Field Operators
-
-#### sqon.has(fieldName, values)
+#### SQON.in(fieldName, values)
 
 Creates a filter requiring the named field to have one of the given values. Should function with single values or arrays of values.
 
-Example: `sqon.has('name',['Tim','Bob','Joe'])`
+Example: `SQON.in('name',['Jim','Bob'])`
 
-#### sqon.gt(fieldName, value)
+#### SQON.gt(fieldName, value)
 
 Greater Than operator. Create a filter requiring the named field to be greater than the given value
 
-Example: `sqon.gt('age',21)`
+Example: `SQON.gt('age',21)`
 
-#### sqon.lt(fieldName, value)
+#### SQON.lt(fieldName, value)
 
 Lesser Than operator. Create a filter requiring the named field to be greater than the given value
 
-Example: `sqon.lt('count', 100)`
+Example: `SQON.lt('count', 100)`
 
-### Combination Operators
+### Combinations
 
-#### sqon.and(sqon)
+Combinations can be initiaed from the SQON class or from a SQON instance.
 
-Creates a filter that requires all elements of its content to be true.
+If this is called from an instance, the method will accept one SQON or an array, and the instance can be considered grouped with the SQONs provided in the arguments.
 
-Example: `sqon.and( sqon.has('name', 'Tim').gt('score', 9000) )`
+If this is called from the class, an array of SQONs is required to be passed.
 
-#### sqon.or(sqon)
+#### SQON.and(sqon)
 
-Creates a filter that requires at least one element of its content to be true.
+All filters in the resulting SQON must be true.
 
-Example: `sqon.or( sqon.has('name', 'Tim').gt('score', 9000) )`
+Example: `SQON.and( [someSqon, anotherSqon] )`
 
-#### sqon.not(sqon)
+#### SQON.or(sqon)
 
-Creates a filter that requires that none of its content elements are true.
+At least one filter in the resulting SQON must be true.
 
-Note: Arranger should be tested with an array of content in 'not', I can only remember using this with negating individual filters.
+Example: `SQON.or( [someSqon, anotherSqon] )`
 
-Example: `sqon.not( sqon.has('name', 'Tim') )`
+#### SQON.not(sqon)
 
-### Build
+None of the filters in the resulting SQON can be true.
 
-To convert the builder object to a plain JS Object invoke `.build()`.
-
-Example: `sqon.has('name', 'Tim').build()`
+Example: `SQON.not( [someSqon] )`
 
 ### From
 
-Build a new sqon builder object with all the content of the sqon passed in. This can create a SQON builder from a JSON string or another SQON builder.
+Build a new SQON from a string or from a JSON object.
 
-Example with string: `sqon.from('{"op":"and","content":[{"op":"in","content":{"field":"name","value":"Tim"}},{"op":"gt","content":{"field":"age","value":"19"}}]}')`
+Example with string:
+
+```js
+SQON.from(
+  '{"op":"and","content":[{"op":"in","content":{"field":"name","value":"Tim"}},{"op":"gt","content":{"field":"age","value":"19"}}]}',
+);
+```
