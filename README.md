@@ -74,7 +74,7 @@ Creates the SQON:
 }
 ```
 
-#### Combining Multiple Filters
+### Combining Multiple Filters
 
 Every SQON can be combined with other SQONs through the boolean combinations `and`, `or`, and `not`:
 
