@@ -237,7 +237,7 @@ Example: `SQON.gt('age',21)`
 
 #### SQON.lt(fieldName, value)
 
-Lesser Than operator. Create a filter requiring the named field to be greater than the given value
+Lesser Than operator. Create a filter requiring the named field to be lesser than the given value
 
 Example: `SQON.lt('count', 100)`
 
