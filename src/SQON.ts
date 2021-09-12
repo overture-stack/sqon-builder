@@ -104,7 +104,7 @@ class SQON implements Combination {
       this.content = parsed.content;
     } else if (sqon instanceof SQON) {
       this.op = sqon.op;
-      this.content = sqon.content;
+      this.content = [...sqon.content];
     } else {
       // sqon is an Operator
       if (isCombination(sqon)) {
@@ -122,24 +122,42 @@ class SQON implements Combination {
   // ===== Combinations
   public and(content: SQON | SQON[]): SQON {
     const output = new SQON(this);
-    if (output.op === CombinationKey.And) {
-      output.content = output.content.concat(content);
-    } else {
+    if (output.op !== CombinationKey.And) {
       // IMPORTANT: Call this.toOperator BEFORE updating this.op
-      output.content = [output.toOperator()].concat(content);
+      output.content = [output.toOperator()];
       output.op = CombinationKey.And;
     }
+    // Add requested content to output.content
+    // But first, check if each of the operators in the content are an AND operator so we can flatter the content
+    const contentAsArray: SQON[] = [].concat(content);
+    contentAsArray.forEach((sqonToAdd) => {
+      if (sqonToAdd.op === CombinationKey.And) {
+        output.content = output.content.concat(sqonToAdd.content);
+      } else {
+        output.content.push(sqonToAdd.toOperator());
+      }
+    });
+
     return output;
   }
   public or(content: SQON | SQON[]): SQON {
     const output = new SQON(this);
-    if (output.op === CombinationKey.Or) {
-      output.content = output.content.concat(content);
-    } else {
+    if (output.op !== CombinationKey.Or) {
       // IMPORTANT: Call this.toOperator BEFORE updating this.op
-      output.content = [output.toOperator()].concat(content);
+      output.content = [output.toOperator()];
       output.op = CombinationKey.Or;
     }
+    // Add requested content to output.content
+    // But first, check if each of the operators in the content are an Or operator so we can flatter the content
+    const contentAsArray: SQON[] = [].concat(content);
+    contentAsArray.forEach((sqonToAdd) => {
+      if (sqonToAdd.op === CombinationKey.Or) {
+        output.content = output.content.concat(sqonToAdd.content);
+      } else {
+        output.content.push(sqonToAdd.toOperator());
+      }
+    });
+
     return output;
   }
   public not(content: SQON | SQON[]): SQON {
@@ -209,7 +227,7 @@ class SQON implements Combination {
   private toOperator(): Combination {
     return {
       op: this.op,
-      content: this.content,
+      content: [...this.content],
     };
   }
 
