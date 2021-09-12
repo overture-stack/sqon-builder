@@ -133,7 +133,16 @@ score.or(age).and(name).not(denied);
 This is equivalent to:
 
 ```js
-SQON.not([denied, SQON.and([name, SQON.or([age, score])])]);
+SQON.not([
+  denied,
+  SQON.and([
+    name,
+    SQON.or([
+      age,
+      score
+    ])
+  ])
+]);
 ```
 
 Result:
