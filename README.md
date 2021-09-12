@@ -1,5 +1,7 @@
 # SQON Builder
 
+THIS IS v1 README STILL. WILL UPDATE ONCE REFACTOR IS DONE.
+
 ## Quick Start Examples
 
 #### One filter example:
