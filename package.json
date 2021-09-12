@@ -1,18 +1,32 @@
 {
   "name": "sqon",
-  "version": "1.0.0",
-  "description": "",
+  "version": "2.0.0",
+  "description": "SQON creation and manipulation library.",
   "main": "dist/index.js",
   "scripts": {
     "build": "rm -rf dist && mkdir dist && NODE_PATH=./ tsc"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Jon Eubank",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joneubank/sqon.git"
+  },
+  "bugs": {
+    "url": "https://github.com/joneubank/sqon/issues"
+  },
+  "homepage": "https://github.com/joneubank/sqon#readme",
+  "keywords": [
+    "overture",
+    "arranger"
+  ],
   "devDependencies": {
-    "typescript": "^2.9.2"
+    "typescript": "^4.4.2"
   },
   "prettier": {
     "trailingComma": "all",
-    "singleQuote": true
+    "singleQuote": true,
+    "arrowFunctionParentheses": "always"
   }
 }
