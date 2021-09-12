@@ -14,7 +14,7 @@ SQON.in('name', ['Jim', 'Bob']);
 
 Produces a SQON with the following content:
 
-```json
+```js
 {
   "op": "and",
   "content": [
@@ -45,7 +45,7 @@ SQON.in('name', ['Jim', 'Bob']).gt('score', 9000).lt('age', 100);
 
 Creates the SQON:
 
-```json
+```js
 {
   "op": "and",
   "content": [
@@ -87,7 +87,7 @@ SQON.or(nameFilter, scoreFilter);
 
 Result:
 
-```json
+```js
 {
   "op": "or",
   "content": [
@@ -138,7 +138,7 @@ SQON.not([denied, SQON.and([name, SQON.or([age, score])])]);
 
 Result:
 
-```json
+```js
 {
   "op": "and",
   "content": [
