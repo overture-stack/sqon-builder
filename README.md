@@ -21,7 +21,7 @@ Produces a SQON with the following content:
     {
       "op": "in",
       "content": {
-        "field": "name",
+        "fieldName": "name",
         "value": ["Jim", "Bob"]
       }
     }
@@ -52,21 +52,21 @@ Creates the SQON:
     {
       "op": "in",
       "content": {
-        "field": "name",
+        "fieldName": "name",
         "value": ["Jim", "Bob"]
       }
     },
     {
       "op": "gt",
       "content": {
-        "field": "score",
+        "fieldName": "score",
         "value": 9000
       }
     },
     {
       "op": "lt",
       "content": {
-        "field": "age",
+        "fieldName": "age",
         "value": 100
       }
     }
@@ -97,7 +97,7 @@ Result:
         {
           "op": "in",
           "content": {
-            "field": "name",
+            "fieldName": "name",
             "value": ["Jim", "Bob"]
           }
         }
@@ -109,7 +109,7 @@ Result:
         {
           "op": "gt",
           "content": {
-            "field": "score",
+            "fieldName": "score",
             "value": 9000
           }
         }
@@ -158,7 +158,7 @@ Result:
             {
               "op": "gt",
               "content": {
-                "field": "score",
+                "fieldName": "score",
                 "value": 9000
               }
             }
@@ -170,7 +170,7 @@ Result:
             {
               "op": "lt",
               "content": {
-                "field": "age",
+                "fieldName": "age",
                 "value": 100
               }
             }
@@ -181,7 +181,7 @@ Result:
     {
       "op": "in",
       "content": {
-        "field": "name",
+        "fieldName": "name",
         "value": ["Jim", "Bob"]
       }
     },
@@ -194,7 +194,7 @@ Result:
             {
               "op": "in",
               "content": {
-                "field": "status",
+                "fieldName": "status",
                 "value": ["DENIED"]
               }
             }
@@ -212,7 +212,7 @@ The SQON data object can be passed directly to most network request libraries, b
 
 ```js
 SQON.in('name', ['Jim', 'Bob']).toString();
-// {"op":"and","content":[{"op":"in","content":{"field":"name","value":["Jim","Bob"]}}]}
+// {"op":"and","content":[{"op":"in","content":{"fieldName":"name","value":["Jim","Bob"]}}]}
 ```
 
 This is just a shortcut to running `JSON.stringify(someSqon)`.
@@ -223,19 +223,19 @@ This is just a shortcut to running `JSON.stringify(someSqon)`.
 
 #### SQON.in(fieldName, values)
 
-Creates a filter requiring the named field to have one of the given values. Should function with single values or arrays of values.
+Creates a filter requiring the given field to have one of the given values. Should function with single values or arrays of values.
 
 Example: `SQON.in('name',['Jim','Bob'])`
 
 #### SQON.gt(fieldName, value)
 
-Greater Than operator. Create a filter requiring the named field to be greater than the given value
+Greater Than operator. Create a filter requiring the given field to be greater than the given value
 
 Example: `SQON.gt('age',21)`
 
 #### SQON.lt(fieldName, value)
 
-Lesser Than operator. Create a filter requiring the named field to be lesser than the given value
+Lesser Than operator. Create a filter requiring the given field to be lesser than the given value
 
 Example: `SQON.lt('count', 100)`
 
@@ -273,6 +273,6 @@ Example with string:
 
 ```js
 SQON.from(
-  '{"op":"and","content":[{"op":"in","content":{"field":"name","value":"Tim"}},{"op":"gt","content":{"field":"age","value":"19"}}]}',
+  '{"op":"and","content":[{"op":"in","content":{"fieldName":"name","value":"Tim"}},{"op":"gt","content":{"fieldName":"age","value":"19"}}]}',
 );
 ```

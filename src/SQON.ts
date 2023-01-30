@@ -13,12 +13,12 @@ enum CombinationKey {
 }
 
 interface ArrayFilterValue {
-  field: string;
+  fieldName: string;
   value: Array<string | number>;
 }
 
 interface ScalarFilterValue {
-  field: string;
+  fieldName: string;
   value: number;
 }
 
@@ -35,7 +35,7 @@ interface ScalarFilter {
 interface Filter {
   op: ArrayFilterKey | ScalarFilterKey;
   content: {
-    field: string;
+    fieldName: string;
     value: Array<string | number> | number;
   };
 }
@@ -54,18 +54,18 @@ export function combine(op: CombinationKey, content: Operator[]): Combination {
   };
 }
 
-// type ArrayFilterFunction = (op: ArrayFilterKey, field: string, value: Array<string | number>) => ArrayFilter;
-// type ScalarFilterFunction = (op: ScalarFilterKey, field: string, value: number) => ScalarFilter;
+// type ArrayFilterFunction = (op: ArrayFilterKey, fieldName: string, value: Array<string | number>) => ArrayFilter;
+// type ScalarFilterFunction = (op: ScalarFilterKey, fieldName: string, value: number) => ScalarFilter;
 export function filter(
   op: ArrayFilterKey | ScalarFilterKey,
-  field: string,
+  fieldName: string,
   value: Array<string | number> | number,
 ): Filter {
   // TODO: typechecking for array or scalar, then casting to silence TS linter
   return {
     op,
     content: {
-      field,
+      fieldName,
       value,
     },
   };
@@ -167,19 +167,19 @@ class SQON implements Combination {
   }
 
   // ===== Filters
-  public in(field: string, value: Array<string | number>): SQON {
+  public in(fieldName: string, value: Array<string | number>): SQON {
     const output = new SQON(this);
-    output.addFilter(filter(ArrayFilterKey.In, field, value));
+    output.addFilter(filter(ArrayFilterKey.In, fieldName, value));
     return output;
   }
-  public gt(field: string, value: number): SQON {
+  public gt(fieldName: string, value: number): SQON {
     const output = new SQON(this);
-    output.addFilter(filter(ScalarFilterKey.GreaterThan, field, value));
+    output.addFilter(filter(ScalarFilterKey.GreaterThan, fieldName, value));
     return output;
   }
-  public lt(field: string, value: number): SQON {
+  public lt(fieldName: string, value: number): SQON {
     const output = new SQON(this);
-    output.addFilter(filter(ScalarFilterKey.LesserThan, field, value));
+    output.addFilter(filter(ScalarFilterKey.LesserThan, fieldName, value));
     return output;
   }
 
@@ -208,14 +208,14 @@ class SQON implements Combination {
   }
 
   // Filters
-  public static in(field: string, value: Array<string | number>): SQON {
-    return new SQON(filter(ArrayFilterKey.In, field, value));
+  public static in(fieldName: string, value: Array<string | number>): SQON {
+    return new SQON(filter(ArrayFilterKey.In, fieldName, value));
   }
-  public static gt(field: string, value: number): SQON {
-    return new SQON(filter(ScalarFilterKey.GreaterThan, field, value));
+  public static gt(fieldName: string, value: number): SQON {
+    return new SQON(filter(ScalarFilterKey.GreaterThan, fieldName, value));
   }
-  public static lt(field: string, value: number): SQON {
-    return new SQON(filter(ScalarFilterKey.LesserThan, field, value));
+  public static lt(fieldName: string, value: number): SQON {
+    return new SQON(filter(ScalarFilterKey.LesserThan, fieldName, value));
   }
 
   // ===== Output
