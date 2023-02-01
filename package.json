@@ -9,7 +9,6 @@
   },
   "author": "OICR",
   "license": "AGPL-3.0-or-later",
-  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/overture-stack/sqon-builder.git"
@@ -23,7 +22,7 @@
     "arranger"
   ],
   "devDependencies": {
-    "typescript": "^4.4.2"
+    "typescript": "^4.9.5"
   },
   "prettier": {
     "trailingComma": "all",
