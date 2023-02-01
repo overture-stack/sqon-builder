@@ -1,5 +1,15 @@
 # SQON Builder
 
+This is a library to facilitate the creation, parsing and manipulation of SQON filter objects.
+It also provides the relevant TypeScript definitions to improve your developer experience when using SQONs.
+
+### Arranger Compatibility
+
+Important note: Only works with Arranger v3+
+
+Changes introduced in Arranger v3.0 have redefined an important part of the SQON syntax: Considering an Arranger "field" is an entity with multiple atributes, e.g. value, state params, display format; for semantic precision and ease of implementation, filters now expect a "fieldName" string (or array of them) instead of a "field".
+i.e. we've renamed the relevant properties.
+
 ## How to Use
 
 ### Filters
