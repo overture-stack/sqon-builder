@@ -1,4 +1,6 @@
-**/.DS_STORE
+.groovylintrc.json
+.vscode/*.log
+
+**/.DS_Store
 dist
 node_modules
-index.js
