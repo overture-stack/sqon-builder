@@ -14,8 +14,10 @@ const checkMatchingFilter = (a: FilterOperator, b: FilterOperator): boolean => {
 		return false;
 	}
 
+	// Clone values into arrays and sort them so we can compare item by item.
 	const valuesA = [...asArray(a.content.value)].sort();
 	const valuesB = [...asArray(b.content.value)].sort();
+	// This check requires that each array is the same length so we can compare them item by item
 	return valuesA.length === valuesB.length && valuesA.every((value, index) => value === valuesB[index]);
 };
 
