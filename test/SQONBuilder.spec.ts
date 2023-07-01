@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import SQONBuilder, { ArrayFilterKeys, CombinationKeys, SQON, ScalarFilterKeys } from '../src';
 import { ZodError } from 'zod';
+import SQONBuilder, { ArrayFilterKeys, CombinationKeys, SQON, ScalarFilterKeys } from '../src';
 import reduceSQON from '../src/utils/reduceSQON';
 
 describe('SQONBuilder', () => {
@@ -307,7 +307,6 @@ describe('SQONBuilder', () => {
 					SQONBuilder.and(SQONBuilder.gt('score', 95)),
 					SQONBuilder.or(SQONBuilder.lt('age', 40)),
 				]);
-				console.log(builder.toString());
 				expect(builder).deep.contains(expectedSqon);
 			});
 			it('or(lt(a), lt(a)) reduces to lt() with max', () => {
@@ -319,7 +318,6 @@ describe('SQONBuilder', () => {
 					},
 				};
 				const builder = SQONBuilder.or([SQONBuilder.lt('score', 55), SQONBuilder.lt('score', 40)]);
-				console.log(builder.toString());
 				expect(builder).deep.contains(expectedSqon);
 			});
 			it('or(gt(a), gt(a)) reduces to gt() with min', () => {
@@ -331,7 +329,6 @@ describe('SQONBuilder', () => {
 					},
 				};
 				const builder = SQONBuilder.or([SQONBuilder.gt('score', 95), SQONBuilder.gt('score', 85)]);
-				console.log(builder.toString());
 				expect(builder).deep.contains(expectedSqon);
 			});
 		});
@@ -399,7 +396,6 @@ describe('SQONBuilder', () => {
 					SQONBuilder.and(SQONBuilder.gt('score', 95)),
 					SQONBuilder.or(SQONBuilder.in('name', ['Jim', 'Bob'])),
 				]);
-				console.log(builder.toString());
 				expect(builder).deep.contains(expectedSqon);
 			});
 		});
