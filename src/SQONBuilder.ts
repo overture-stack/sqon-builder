@@ -33,14 +33,14 @@ type SQONBuilder = {
 	 * Return the current SQON as a plain object
 	 * @returns
 	 */
-	toPojo: () => SQON;
+	toValue: () => SQON;
 } & SQON;
 
 const createBuilder = (sqon: SQON): SQONBuilder => {
 	const _sqon = reduceSQON(clonePojo(sqon));
 
 	const toString = () => JSON.stringify(_sqon);
-	const toPojo = () => _sqon;
+	const toValue = () => _sqon;
 	return {
 		and: _and(_sqon),
 		or: _or(_sqon),
@@ -49,7 +49,7 @@ const createBuilder = (sqon: SQON): SQONBuilder => {
 		gt: _gt(_sqon),
 		lt: _lt(_sqon),
 		toString,
-		toPojo,
+		toValue,
 		..._sqon,
 	};
 };

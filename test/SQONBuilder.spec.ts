@@ -57,7 +57,7 @@ describe('SQONBuilder', () => {
 			const builder = SQONBuilder(input);
 			expect(builder).not.equal(input);
 			expect(builder.content).not.equal(input.content);
-			expect(builder).deep.contain(input.toPojo());
+			expect(builder).deep.contain(input.toValue());
 		});
 		it('accepts a valid JSON string', () => {
 			const input = `{"op":"in","content":{"fieldName":"name","value":["Jim"]}}`;
@@ -409,7 +409,7 @@ describe('SQONBuilder', () => {
 				const builder = SQONBuilder.from(input);
 				expect(builder).not.equal(input);
 				expect(builder.content).not.equal(input.content);
-				expect(builder).deep.contain(input.toPojo());
+				expect(builder).deep.contain(input.toValue());
 			});
 			it('creates builder from valid sqon', () => {
 				const input: SQON = {
@@ -465,7 +465,7 @@ describe('SQONBuilder', () => {
 				expect(output).equal(expectedString);
 			});
 		});
-		describe('toPojo', () => {
+		describe('toValue', () => {
 			it('returns object matching sqon', () => {
 				const expectedSqon: SQON = {
 					op: ArrayFilterKeys.In,
@@ -474,11 +474,11 @@ describe('SQONBuilder', () => {
 						value: ['Jim'],
 					},
 				};
-				const output = SQONBuilder.in('name', 'Jim').toPojo();
+				const output = SQONBuilder.in('name', 'Jim').toValue();
 				expect(output).deep.equal(expectedSqon);
 			});
 			it('returns object with no functions', () => {
-				const output = SQONBuilder.in('name', 'Jim').toPojo();
+				const output = SQONBuilder.in('name', 'Jim').toValue();
 				expect(Object.values(output).some((value) => typeof value === 'function')).false;
 			});
 		});

@@ -1,22 +1,25 @@
 # SQON Builder
 
-SQONBuilder is a utility for the creation and manipulation of SQON filter objects. SQON is an acronym for "Serialized Query Object Notation" and was defined as the filter syntax for [Arraner](http://github.com/overture-stack/arranger).
+SQONBuilder is a utility for the creation and manipulation of SQON filter objects. SQON is an acronym for "Serialized Query Object Notation" and was defined as the filter syntax for [Arranger](http://github.com/overture-stack/arranger).
 
 Along with the SQONBuilder, this library exports TypeScript type definitions for a SQON and the matching schema validation objects that you can use to independently validate the structure of a SQON.
 
-### Arranger Compatibility
+## Arranger Compatibility
 
 __Important note: This utility is only compatible with Arranger v3+__
 
-Arranger 3 clarified the SQON property naming, changing `field` to be `fieldName` in every Filter. This builder adheres to that formatting.
+Arranger 3 clarified the SQON property naming, changing `field` to be `fieldName` in every Filter. This builder and exported type definitions use this syntax.
 
+## Table of Contents
 - [SQON Builder](#sqon-builder)
-		- [Arranger Compatibility](#arranger-compatibility)
+	- [Arranger Compatibility](#arranger-compatibility)
+	- [Table of Contents](#table-of-contents)
 	- [How to Use](#how-to-use)
 		- [Filters](#filters)
 		- [Combining Multiple Filters](#combining-multiple-filters)
-		- [String Output](#string-output)
+		- [SQON Output to String or Object](#sqon-output-to-string-or-object)
 	- [API](#api)
+		- [Root](#root)
 		- [Filters](#filters-1)
 			- [SQON.in(fieldName, values)](#sqoninfieldname-values)
 			- [SQON.gt(fieldName, value)](#sqongtfieldname-value)
@@ -26,6 +29,11 @@ Arranger 3 clarified the SQON property naming, changing `field` to be `fieldName
 			- [SQON.or(sqon)](#sqonorsqon)
 			- [SQON.not(sqon)](#sqonnotsqon)
 		- [From](#from)
+	- [Types and SQON Validation](#types-and-sqon-validation)
+		- [SQON Type Composition](#sqon-type-composition)
+			- [Convenient Type Guards](#convenient-type-guards)
+	- [SQON Reduction](#sqon-reduction)
+
 
 ## How to Use
 
@@ -237,9 +245,9 @@ Results in:
 
 ```
 
-### SQON Output to String or POJO
+### SQON Output to String or Object
 
-The SQONBuilder object can be passed directly to most network request libraries since it contains the properties of the SQON. In cases where a string is required or the object with builder functions cannot be used, the builder can be output as a string with `.toString()` or as a plain object as `.toPojo()`. 
+The SQONBuilder object can be passed directly to most network request libraries since it contains the properties of the SQON. In cases where a string is required or the object with builder functions cannot be used, the builder can be output as a string with `.toString()` or as a plain object as `.toValue()`. 
 
 ```ts
 const builtder = SQONBuilder.in('name', ['Jim', 'Bob']);
@@ -248,7 +256,7 @@ builder.toString();
 // '{"op":"in","content":{"fieldName":"name","value":["Jim","Bob"]}}'
 
 
-builder.toPojo();
+builder.toValue();
 // { op: 'in', content: { fieldName: 'name', value: [ 'Jim', 'Bob' ] } }
 ```
 
@@ -353,12 +361,41 @@ if(validationResult.success) {
 
 ### SQON Type Composition
 
-There are two types of operators that compose a SQON, and there are exported types that represent them
+There are two types of operators that compose a SQON. Each of these has a TS type alias provided by this package.
 
-1. `FilterOperator` union of In, GreaterThan and LesserThan filters. The content requires a `fieldName` and value that it will match. `InFilter` is an `ArrayFilter` that can accept an array of values, while `GreaterThanFilter` and `LesserThanFilter` are a `ScalarFilter` that only accept a `number` as a value.
-2. `CombinationOperator` have `and`, `or`, and `not` as operations, and has `content` that accepts a single or array of `Operators`, either Filter or Combination.
+1. `FilterOperator` represents a filter restricting matching values of a specific field. The content requires a `fieldName` and value that it will match. There are two categories of filter:  `ArrayFilter` that can accept an array of values, and `ScalarFilter` that only accept a single `number` as a value.
+2. `CombinationOperator` represents boolean logic applied to a group of other operators. The `content` of a CombinationOperator  accepts a single `Operator` or array of `Operator`s, either Filter or Combination.
 
 The `Operator` type is a union of the `FilterOperator | CombinationOperator`. This is equivalent to a `SQON` type - SQON is just an alias for this type.
+
+#### Convenient Type Guards
+
+To help identify which type of `Operator` the top level of a given `SQON` is, this package exports some functions that act as type guards:
+
+1. `isCombination()` will identify if the input is a `CombinationOperator`
+2. `isFilter()` will identify if the input is a `FilterOperator`
+3. `isArrayFilter()` will further narrow a filter down to see if it can accept an Array of values, or only a single number.
+
+Example:
+
+```ts
+import { isCombination, isArrayFilter } from '@overture-stack/sqon-builder';
+
+const sqon: SQON = getSQON();
+
+if(isCombination(sqon)) {
+	// can interact with sqon knowing it is a combination operator
+} else {
+	// can interact with sqon knowing it is a filter
+
+	// Lets narrow down the filter type further
+	if(isArrayFilter(sqon)) {
+		// we can assign an array of values to sqon.content.value
+	} else {
+		// sqon.content.value is a single number
+	}
+}
+```
 
 ## SQON Reduction
 
@@ -369,7 +406,7 @@ The reducer function is exported so if you want to reduce a SQON provided by ano
 ```ts
 import { reduceSQON } from '@overture-stack/sqon-builder`;
 
-const sqon: SQON = { op: 'and', 'content': [ { op: 'lt', content: { fieldName: 'age', value: 100 } } ] }
+const sqon: SQON = { op: 'and', 'content': [ { op: 'lt', content: { fieldName: 'age', value: 100 } } ] };
 
 const reduced = reduceSQON(sqon);
 // { op: 'lt', content: { fieldName: 'age', value: 100 } }
