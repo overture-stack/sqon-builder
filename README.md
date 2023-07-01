@@ -1,14 +1,39 @@
 # SQON Builder
 
-This is a library to facilitate the creation, parsing and manipulation of SQON filter objects.
-It also provides the relevant TypeScript definitions to improve your developer experience when using SQONs.
+SQONBuilder is a utility for the creation and manipulation of SQON filter objects. SQON is an acronym for "Serialized Query Object Notation" and was defined as the filter syntax for [Arranger](http://github.com/overture-stack/arranger).
 
-### Arranger Compatibility
+Along with the SQONBuilder, this library exports TypeScript type definitions for a SQON and the matching schema validation objects that you can use to independently validate the structure of a SQON.
 
-Important note: Only works with Arranger v3+
+## Arranger Compatibility
 
-Changes introduced in Arranger v3.0 have redefined an important part of the SQON syntax: Considering an Arranger "field" is an entity with multiple atributes, e.g. value, state params, display format; for semantic precision and ease of implementation, filters now expect a "fieldName" string (or array of them) instead of a "field".
-i.e. we've renamed the relevant properties.
+__Important note: This utility is only compatible with Arranger v3+__
+
+Arranger 3 clarified the SQON property naming, changing `field` to be `fieldName` in every Filter. This builder and exported type definitions use this syntax.
+
+## Table of Contents
+- [SQON Builder](#sqon-builder)
+	- [Arranger Compatibility](#arranger-compatibility)
+	- [Table of Contents](#table-of-contents)
+	- [How to Use](#how-to-use)
+		- [Filters](#filters)
+		- [Combining Multiple Filters](#combining-multiple-filters)
+		- [SQON Output to String or Object](#sqon-output-to-string-or-object)
+	- [API](#api)
+		- [Root](#root)
+		- [Filters](#filters-1)
+			- [SQON.in(fieldName, values)](#sqoninfieldname-values)
+			- [SQON.gt(fieldName, value)](#sqongtfieldname-value)
+			- [SQON.lt(fieldName, value)](#sqonltfieldname-value)
+		- [Combinations](#combinations)
+			- [SQON.and(sqon)](#sqonandsqon)
+			- [SQON.or(sqon)](#sqonorsqon)
+			- [SQON.not(sqon)](#sqonnotsqon)
+		- [From](#from)
+	- [Types and SQON Validation](#types-and-sqon-validation)
+		- [SQON Type Composition](#sqon-type-composition)
+			- [Convenient Type Guards](#convenient-type-guards)
+	- [SQON Reduction](#sqon-reduction)
+
 
 ## How to Use
 
@@ -16,46 +41,41 @@ i.e. we've renamed the relevant properties.
 
 To create a SQON that filters one property by value:
 
-```js
-import SQON from 'sqon-builder';
+```ts
+import SQONBuilder from '@overture-stack/sqon-builder';
 
-SQON.in('name', ['Jim', 'Bob']);
+SQONBuilder.in('name', ['Jim', 'Bob']);
 ```
 
 Produces a SQON with the following content:
 
-```js
+```json
 {
-  "op": "and",
-  "content": [
-    {
-      "op": "in",
-      "content": {
-        "fieldName": "name",
-        "value": ["Jim", "Bob"]
-      }
-    }
-  ]
+	"op": "in",
+	"content": {
+		"fieldName": "name",
+		"value": ["Jim", "Bob"]
+	}
 }
 ```
 
 There are currently 3 filters available (to be expanded to match the full SQON specification):
 
-| **Filter** |     **Value Type**      |                         **Description**                          |
-| :--------: | :---------------------: | :--------------------------------------------------------------: |
-|    `in`    | Array<string \| number> |              field value must be in the given list.              |
-|    `gt`    |         number          | Greater Than - field value must be greater than the given number |
-|    `lt`    |         number          |  Lesser Than - field value must be lesser than the given number  |
+| **Filter** |               **Value Type**                |                                **Description**                                 |
+| :--------: | :-----------------------------------------: | :----------------------------------------------------------------------------: |
+|    `in`    | Array<string \| number> \| string \| number | In - field must match the provided value or be included in the array of values |
+|    `gt`    |                   number                    |        Greater Than - field value must be greater than the given number        |
+|    `lt`    |                   number                    |         Lesser Than - field value must be lesser than the given number         |
 
-A SQON can chain multiple of these filters together into a single SQON that requires all the provided conditions:
+A SQON can chain multiple of these filters together into a single SQON that requires all the provided conditions. By default, these are grouped into an 'and' operator:
 
-```js
-SQON.in('name', ['Jim', 'Bob']).gt('score', 9000).lt('age', 100);
+```ts
+SQONBuilder.in('name', ['Jim', 'Bob']).gt('score', 9000).lt('age', 100);
 ```
 
 Creates the SQON:
 
-```js
+```json
 {
   "op": "and",
   "content": [
@@ -88,16 +108,15 @@ Creates the SQON:
 
 Every SQON can be combined with other SQONs through the boolean combinations `and`, `or`, and `not`:
 
-```js
-const nameFilter = SQON.in('name', ['Jim', 'Bob']);
-const scoreFilter = SQON.gt('score', 9000);
+```ts
+const nameFilter = SQONBuilder.in('name', ['Jim', 'Bob']);
+const scoreFilter = SQONBuilder.gt('score', 9000);
 
-SQON.or(nameFilter, scoreFilter);
+SQONBuilder.or(nameFilter, scoreFilter);
 ```
-
 Result:
 
-```js
+```json
 {
   "op": "or",
   "content": [
@@ -129,33 +148,33 @@ Result:
 }
 ```
 
-A SQON can also chain these operations like with filters to combine with other SQONs:
+A SQON can also chain these operations like with filters to combine with other SQONs. Chaining another operator onto the right of a builder will wrap the existing SQON in that operator, combined with the provided content. 
 
-```js
-const name = SQON.in('name', ['Jim', 'Bob']);
-const denied = SQON.in('status', ['DENIED']);
-const score = SQON.gt('score', 9000);
-const age = SQON.lt('age', 100);
+Each Combination Operator can accept a SQON or array of SQONs.
 
-score.or(age).and(name).not(denied);
+```ts
+const score = SQONBuilder.gt('score', 9000);
+const age = SQONBuilder.lt('age', 100);
+const name = SQONBuilder.in('name', ['Jim', 'Bob']);
+
+score.or(age).and(name);
 ```
 
 This is equivalent to:
 
-```js
+```ts
 SQON.and([
   SQON.or([
     score,
     age
   ])
-  name,
-  SQON.not([denied]),
+  name
 ]);
 ```
 
 Result:
 
-```js
+```json
 {
   "op": "and",
   "content": [
@@ -194,46 +213,72 @@ Result:
         "fieldName": "name",
         "value": ["Jim", "Bob"]
       }
-    },
-    {
-      "op": "not",
-      "content": [
-        {
-          "op": "and",
-          "content": [
-            {
-              "op": "in",
-              "content": {
-                "fieldName": "status",
-                "value": ["DENIED"]
-              }
-            }
-          ]
-        }
-      ]
     }
   ]
 }
 ```
 
-### String Output
+The `.not()` combination will wrap the existing content in an `and` operation, and then insert a `not` operator surrounding the argument:
 
-The SQON data object can be passed directly to most network request libraries, but if a string is needed there is a convenience method `toString()`.
-
-```js
-SQON.in('name', ['Jim', 'Bob']).toString();
-// {"op":"and","content":[{"op":"in","content":{"fieldName":"name","value":["Jim","Bob"]}}]}
+```ts
+SQONBuilder.lt('age', 100).not(SQONBuilder.in('status', ['DENIED']) );
 ```
 
-This is just a shortcut to running `JSON.stringify(someSqon)`.
+Results in:
+
+```json
+{
+  "op": "and",
+  "content": [
+    { "op": "lt", "content": { "fieldName": "age", "value": 100 } },
+    {
+      "op": "not",
+      "content": [
+        {
+          "op": "in",
+          "content": { "fieldName": "status", "value": ["DENIED"] }
+        }
+      ]
+    }
+  ]
+}
+
+```
+
+### SQON Output to String or Object
+
+The SQONBuilder object can be passed directly to most network request libraries since it contains the properties of the SQON. In cases where a string is required or the object with builder functions cannot be used, the builder can be output as a string with `.toString()` or as a plain object as `.toValue()`. 
+
+```ts
+const builtder = SQONBuilder.in('name', ['Jim', 'Bob']);
+
+builder.toString();
+// '{"op":"in","content":{"fieldName":"name","value":["Jim","Bob"]}}'
+
+
+builder.toValue();
+// { op: 'in', content: { fieldName: 'name', value: [ 'Jim', 'Bob' ] } }
+```
 
 ## API
+
+### Root
+
+The `SQONBuilder` is a function that will create a new builder from another SQONBuilder, SQON object, or JSON string.
+
+Example: `const builder = SQONBuilder(sqonJson);`
+
+All filters and combination methods described here can be called from the returned builder object.
+
+Example: `builder.in('name','Jim').gt('score',95);`
+
+This will throw an error if the provided value is not a valid SQON or JSON string.
 
 ### Filters
 
 #### SQON.in(fieldName, values)
 
-Creates a filter requiring the given field to have one of the given values. Should function with single values or arrays of values.
+Creates a filter requiring the given field to have one of the given values. The value can be a single string or number value, or an array of strings or numbers.
 
 Example: `SQON.in('name',['Jim','Bob'])`
 
@@ -281,8 +326,88 @@ Build a new SQON from a string or from a JSON object.
 
 Example with string:
 
-```js
+```ts
 SQON.from(
   '{"op":"and","content":[{"op":"in","content":{"fieldName":"name","value":"Tim"}},{"op":"gt","content":{"fieldName":"age","value":"19"}}]}',
 );
+```
+
+This will throw an error if the provided value is not a valid SQON or JSON string.
+
+## Types and SQON Validation
+
+SQON types are exported from the library, and a [Zod](http://https://www.npmjs.com/package/zod) schema that will provide validation of the type is exported as a variable with a matching name.
+
+The base type is `SQON`.
+
+```ts
+import { SQON } form '@overture-stack/sqon-builder';
+
+// TypeScript checked SQON types
+const mySqon: SQON = { op: 'in', content: { fieldName: 'name', value: [ 'Jim', 'Bob' ] } };
+
+// Parsing an unknown variable
+const maybeSqon = {'might':'not be valid'};// invalid sqon
+const validationResult = SQON.safeParse(maybeSqon);
+
+if(validationResult.success) {
+	// Successfully parsed
+	const validSqon = validationResult.data;
+} else {
+	// Validation errors, can be read out here
+	const errors = validationResult.error;
+}
+```
+
+### SQON Type Composition
+
+There are two types of operators that compose a SQON. Each of these has a TS type alias provided by this package.
+
+1. `FilterOperator` represents a filter restricting matching values of a specific field. The content requires a `fieldName` and value that it will match. There are two categories of filter:  `ArrayFilter` that can accept an array of values, and `ScalarFilter` that only accept a single `number` as a value.
+2. `CombinationOperator` represents boolean logic applied to a group of other operators. The `content` of a CombinationOperator  accepts a single `Operator` or array of `Operator`s, either Filter or Combination.
+
+The `Operator` type is a union of the `FilterOperator | CombinationOperator`. This is equivalent to a `SQON` type - SQON is just an alias for this type.
+
+#### Convenient Type Guards
+
+To help identify which type of `Operator` the top level of a given `SQON` is, this package exports some functions that act as type guards:
+
+1. `isCombination()` will identify if the input is a `CombinationOperator`
+2. `isFilter()` will identify if the input is a `FilterOperator`
+3. `isArrayFilter()` will further narrow a filter down to see if it can accept an Array of values, or only a single number.
+
+Example:
+
+```ts
+import { isCombination, isArrayFilter } from '@overture-stack/sqon-builder';
+
+const sqon: SQON = getSQON();
+
+if(isCombination(sqon)) {
+	// can interact with sqon knowing it is a combination operator
+} else {
+	// can interact with sqon knowing it is a filter
+
+	// Lets narrow down the filter type further
+	if(isArrayFilter(sqon)) {
+		// we can assign an array of values to sqon.content.value
+	} else {
+		// sqon.content.value is a single number
+	}
+}
+```
+
+## SQON Reduction
+
+SQONs produced by the SQON builder are run through a reducer function which will remove redundant operators and collect similar filters. For example, if there is an `and` combination wrapping a single filter, the `and` operator can be removed and replaced by the single filter.
+
+The reducer function is exported so if you want to reduce a SQON provided by another source:
+
+```ts
+import { reduceSQON } from '@overture-stack/sqon-builder`;
+
+const sqon: SQON = { op: 'and', 'content': [ { op: 'lt', content: { fieldName: 'age', value: 100 } } ] };
+
+const reduced = reduceSQON(sqon);
+// { op: 'lt', content: { fieldName: 'age', value: 100 } }
 ```
