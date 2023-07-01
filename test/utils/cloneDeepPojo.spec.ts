@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import cloneDeepPojo from '../../src/utils/cloneDeepPojo';
 
-describe('cloneDeepPojo', () => {
+describe('utils/cloneDeepPojo', () => {
 	it('clones nested objects', () => {
 		const object = {
 			array: ['item', { a: 'objectInArray' }, 1234],
