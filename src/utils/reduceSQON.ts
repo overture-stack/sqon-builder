@@ -1,7 +1,7 @@
 import {
-	ArrayFilterKeys,
 	CombinationKeys,
 	CombinationOperator,
+	FilterKeys,
 	FilterOperator,
 	SQON,
 	ScalarFilterKeys,
@@ -10,7 +10,6 @@ import {
 } from '../types/sqon';
 import asArray from './asArray';
 import filterDuplicates from './filterDuplicates';
-
 const deduplicateValues = (filter: FilterOperator): FilterOperator => {
 	if (isArrayFilter(filter)) {
 		return {
@@ -53,7 +52,7 @@ const reduceSQON = (sqon: SQON): SQON => {
 					 * - 5. multiple IN on the same 'or'/'and'/'not' combo can be combined into a list
 					 */
 					// In this if/else chain we check both the match and the innersqon match. we know this is true thanks to the .find that found the match, but this is needed for the type checker
-					if (match.op === ScalarFilterKeys.GreaterThan && innerSqon.op === ScalarFilterKeys.GreaterThan) {
+					if (match.op === FilterKeys.GreaterThan && innerSqon.op === FilterKeys.GreaterThan) {
 						if (output.op === CombinationKeys.And || output.op === CombinationKeys.Not) {
 							// 1. multiple GT on the same 'and'/'not' combo can be a single with the greater value
 							match.content.value = Math.max(match.content.value, innerSqon.content.value);
@@ -63,7 +62,7 @@ const reduceSQON = (sqon: SQON): SQON => {
 						}
 					}
 
-					if (match.op === ScalarFilterKeys.LesserThan && innerSqon.op === ScalarFilterKeys.LesserThan) {
+					if (match.op === FilterKeys.LesserThan && innerSqon.op === FilterKeys.LesserThan) {
 						if (output.op === CombinationKeys.And || output.op === CombinationKeys.Not) {
 							// 3. multiple LT on the same 'and'/'not combo can be the lesser value
 							match.content.value = Math.min(match.content.value, innerSqon.content.value);
@@ -73,7 +72,7 @@ const reduceSQON = (sqon: SQON): SQON => {
 						}
 					}
 
-					if (match.op === ArrayFilterKeys.In && innerSqon.op === ArrayFilterKeys.In) {
+					if (match.op === FilterKeys.In && innerSqon.op === FilterKeys.In) {
 						// 5. multiple IN on the same 'or'/'and'/'not' combo can be combined into a list
 						match.content.value = [...asArray(match.content.value), ...asArray(innerSqon.content.value)];
 					}

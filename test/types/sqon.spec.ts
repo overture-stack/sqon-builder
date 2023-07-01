@@ -1,12 +1,12 @@
 import { expect } from 'chai';
 import {
+	CombinationKeys,
+	CombinationOperator,
+	FilterKeys,
+	FilterOperator,
+	isArrayFilter,
 	isCombination,
 	isFilter,
-	isArrayFilter,
-	CombinationOperator,
-	CombinationKeys,
-	FilterOperator,
-	FilterKeys,
 } from '../../src/types/sqon';
 
 const combo: CombinationOperator = { op: CombinationKeys.And, content: [] };
