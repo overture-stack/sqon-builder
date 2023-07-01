@@ -86,10 +86,9 @@ const reduceSQON = (sqon: SQON): SQON => {
 				 * Checks for nested combinations:
 				 * 1. if inner sqon has empty content, we remove it from the sqon
 				 * 2. if inner sqon has only one item, and output op is not 'not'
-				 * 3. if inner sqon op is 'not' we add it to output as is -> not playing with negation logic on this loop
+				 * 3. if inner sqon op is 'not' we add it to output as is -> not modifying negation logic
 				 * 4. if inner sqon has the same 'op' as the output ('and'/'or'), we take the inner sqon's content but not the duplicated wrapper
 				 */
-				console.log('combo', innerSqon);
 				if (innerSqon.content.length === 0) {
 					// 1. inner sqon has empty content
 					continue;
