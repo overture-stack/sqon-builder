@@ -144,5 +144,3 @@ SQONBuilder.lt = _lt({ op: CombinationKeys.And, content: [] });
 SQONBuilder.from = _from;
 
 export default SQONBuilder;
-
-console.log(SQONBuilder.in('name', 'jim').toString());
