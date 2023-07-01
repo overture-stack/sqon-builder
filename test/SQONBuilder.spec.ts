@@ -1,20 +1,27 @@
 import { expect } from 'chai';
 import { ZodError } from 'zod';
-import SQONBuilder, { ArrayFilterKeys, CombinationKeys, SQON, ScalarFilterKeys } from '../src';
+import SQONBuilder, {
+	ArrayFilterKeys,
+	CombinationKeys,
+	FilterKeys,
+	FilterOperator,
+	SQON,
+	ScalarFilterKeys,
+} from '../src';
 import reduceSQON from '../src/utils/reduceSQON';
 
 describe('SQONBuilder', () => {
 	describe('Root', () => {
 		it('accepts a sqon', () => {
 			const expectedSqon: SQON = {
-				op: ArrayFilterKeys.In,
+				op: FilterKeys.In,
 				content: {
 					fieldName: 'score',
 					value: [100],
 				},
 			};
 			const builder = SQONBuilder({
-				op: ArrayFilterKeys.In,
+				op: FilterKeys.In,
 				content: {
 					fieldName: 'score',
 					value: [100],
@@ -30,14 +37,14 @@ describe('SQONBuilder', () => {
 						op: CombinationKeys.And,
 						content: [
 							{
-								op: ArrayFilterKeys.In,
+								op: FilterKeys.In,
 								content: {
 									fieldName: 'name',
 									value: 'Jim',
 								},
 							},
 							{
-								op: ArrayFilterKeys.In,
+								op: FilterKeys.In,
 								content: {
 									fieldName: 'name',
 									value: ['Bob', 'Greg'],
@@ -62,7 +69,7 @@ describe('SQONBuilder', () => {
 		it('accepts a valid JSON string', () => {
 			const input = `{"op":"in","content":{"fieldName":"name","value":["Jim"]}}`;
 			const expectedSqon: SQON = {
-				op: ArrayFilterKeys.In,
+				op: FilterKeys.In,
 				content: {
 					fieldName: 'name',
 					value: ['Jim'],
@@ -86,7 +93,7 @@ describe('SQONBuilder', () => {
 		describe('in', () => {
 			it('single number', () => {
 				const expectedSqon: SQON = {
-					op: ArrayFilterKeys.In,
+					op: FilterKeys.In,
 					content: {
 						fieldName: 'score',
 						value: [100],
@@ -97,7 +104,7 @@ describe('SQONBuilder', () => {
 			});
 			it('single string', () => {
 				const expectedSqon: SQON = {
-					op: ArrayFilterKeys.In,
+					op: FilterKeys.In,
 					content: {
 						fieldName: 'name',
 						value: ['Jim'],
@@ -108,7 +115,7 @@ describe('SQONBuilder', () => {
 			});
 			it('array number', () => {
 				const expectedSqon: SQON = {
-					op: ArrayFilterKeys.In,
+					op: FilterKeys.In,
 					content: {
 						fieldName: 'score',
 						value: [95, 96, 97, 98, 99, 100],
@@ -119,7 +126,7 @@ describe('SQONBuilder', () => {
 			});
 			it('array string', () => {
 				const expectedSqon: SQON = {
-					op: ArrayFilterKeys.In,
+					op: FilterKeys.In,
 					content: {
 						fieldName: 'name',
 						value: ['Jim', 'Bob'],
@@ -130,7 +137,7 @@ describe('SQONBuilder', () => {
 			});
 			it('removes duplicates', () => {
 				const expectedSqon: SQON = {
-					op: ArrayFilterKeys.In,
+					op: FilterKeys.In,
 					content: {
 						fieldName: 'name',
 						value: ['Jim', 'Bob'],
@@ -143,7 +150,7 @@ describe('SQONBuilder', () => {
 		describe('gt', () => {
 			it('generates filter', () => {
 				const expectedSqon: SQON = {
-					op: ScalarFilterKeys.GreaterThan,
+					op: FilterKeys.GreaterThan,
 					content: {
 						fieldName: 'score',
 						value: 95,
@@ -156,7 +163,7 @@ describe('SQONBuilder', () => {
 		describe('lt', () => {
 			it('generates filter', () => {
 				const expectedSqon: SQON = {
-					op: ScalarFilterKeys.LesserThan,
+					op: FilterKeys.LesserThan,
 					content: {
 						fieldName: 'score',
 						value: 50,
@@ -172,14 +179,14 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.And,
 					content: [
 						{
-							op: ScalarFilterKeys.GreaterThan,
+							op: FilterKeys.GreaterThan,
 							content: {
 								fieldName: 'score',
 								value: 95,
 							},
 						},
 						{
-							op: ArrayFilterKeys.In,
+							op: FilterKeys.In,
 							content: {
 								fieldName: 'name',
 								value: ['Jim', 'Bob'],
@@ -192,7 +199,7 @@ describe('SQONBuilder', () => {
 			});
 			it('reduces a single filter', () => {
 				const expectedSqon: SQON = {
-					op: ScalarFilterKeys.GreaterThan,
+					op: FilterKeys.GreaterThan,
 					content: {
 						fieldName: 'score',
 						value: 95,
@@ -203,7 +210,7 @@ describe('SQONBuilder', () => {
 			});
 			it('reduces a single combination operator', () => {
 				const expectedSqon: SQON = {
-					op: ScalarFilterKeys.GreaterThan,
+					op: FilterKeys.GreaterThan,
 					content: {
 						fieldName: 'score',
 						value: 95,
@@ -213,7 +220,7 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.Or,
 					content: [
 						{
-							op: ScalarFilterKeys.GreaterThan,
+							op: FilterKeys.GreaterThan,
 							content: { fieldName: 'score', value: 95 },
 						},
 					],
@@ -226,14 +233,14 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.And,
 					content: [
 						{
-							op: ScalarFilterKeys.GreaterThan,
+							op: FilterKeys.GreaterThan,
 							content: {
 								fieldName: 'score',
 								value: 95,
 							},
 						},
 						{
-							op: ScalarFilterKeys.LesserThan,
+							op: FilterKeys.LesserThan,
 							content: {
 								fieldName: 'age',
 								value: 40,
@@ -254,14 +261,14 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.Or,
 					content: [
 						{
-							op: ScalarFilterKeys.GreaterThan,
+							op: FilterKeys.GreaterThan,
 							content: {
 								fieldName: 'score',
 								value: 95,
 							},
 						},
 						{
-							op: ArrayFilterKeys.In,
+							op: FilterKeys.In,
 							content: {
 								fieldName: 'name',
 								value: ['Jim', 'Bob'],
@@ -274,7 +281,7 @@ describe('SQONBuilder', () => {
 			});
 			it('reduces a single filter', () => {
 				const expectedSqon: SQON = {
-					op: ScalarFilterKeys.GreaterThan,
+					op: FilterKeys.GreaterThan,
 					content: {
 						fieldName: 'score',
 						value: 95,
@@ -288,14 +295,14 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.Or,
 					content: [
 						{
-							op: ScalarFilterKeys.GreaterThan,
+							op: FilterKeys.GreaterThan,
 							content: {
 								fieldName: 'score',
 								value: 95,
 							},
 						},
 						{
-							op: ScalarFilterKeys.LesserThan,
+							op: FilterKeys.LesserThan,
 							content: {
 								fieldName: 'age',
 								value: 40,
@@ -311,7 +318,7 @@ describe('SQONBuilder', () => {
 			});
 			it('or(lt(a), lt(a)) reduces to lt() with max', () => {
 				const expectedSqon: SQON = {
-					op: ScalarFilterKeys.LesserThan,
+					op: FilterKeys.LesserThan,
 					content: {
 						fieldName: 'score',
 						value: 55,
@@ -322,7 +329,7 @@ describe('SQONBuilder', () => {
 			});
 			it('or(gt(a), gt(a)) reduces to gt() with min', () => {
 				const expectedSqon: SQON = {
-					op: ScalarFilterKeys.GreaterThan,
+					op: FilterKeys.GreaterThan,
 					content: {
 						fieldName: 'score',
 						value: 85,
@@ -338,14 +345,14 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.Not,
 					content: [
 						{
-							op: ScalarFilterKeys.GreaterThan,
+							op: FilterKeys.GreaterThan,
 							content: {
 								fieldName: 'score',
 								value: 95,
 							},
 						},
 						{
-							op: ArrayFilterKeys.In,
+							op: FilterKeys.In,
 							content: {
 								fieldName: 'name',
 								value: ['Jim', 'Bob'],
@@ -361,7 +368,7 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.Not,
 					content: [
 						{
-							op: ScalarFilterKeys.GreaterThan,
+							op: FilterKeys.GreaterThan,
 							content: {
 								fieldName: 'score',
 								value: 95,
@@ -377,14 +384,14 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.Not,
 					content: [
 						{
-							op: ScalarFilterKeys.GreaterThan,
+							op: FilterKeys.GreaterThan,
 							content: {
 								fieldName: 'score',
 								value: 95,
 							},
 						},
 						{
-							op: ArrayFilterKeys.In,
+							op: FilterKeys.In,
 							content: {
 								fieldName: 'name',
 								value: ['Jim', 'Bob'],
@@ -409,7 +416,7 @@ describe('SQONBuilder', () => {
 			});
 			it('creates builder from valid sqon', () => {
 				const input: SQON = {
-					op: ArrayFilterKeys.In,
+					op: FilterKeys.In,
 					content: {
 						fieldName: 'score',
 						value: [100],
@@ -421,7 +428,7 @@ describe('SQONBuilder', () => {
 			it('creates builder from valid string', () => {
 				const input = `{"op":"in","content":{"fieldName":"name","value":["Jim"]}}`;
 				const expectedSqon: SQON = {
-					op: ArrayFilterKeys.In,
+					op: FilterKeys.In,
 					content: {
 						fieldName: 'name',
 						value: ['Jim'],
@@ -433,7 +440,7 @@ describe('SQONBuilder', () => {
 			it('throws ZodError for invalid object', () => {
 				// invalid op type for value
 				const invalid = {
-					op: ScalarFilterKeys.GreaterThan,
+					op: FilterKeys.GreaterThan,
 					content: {
 						fieldName: 'name',
 						value: ['Jim'],
@@ -464,7 +471,7 @@ describe('SQONBuilder', () => {
 		describe('toValue', () => {
 			it('returns object matching sqon', () => {
 				const expectedSqon: SQON = {
-					op: ArrayFilterKeys.In,
+					op: FilterKeys.In,
 					content: {
 						fieldName: 'name',
 						value: ['Jim'],
@@ -478,20 +485,21 @@ describe('SQONBuilder', () => {
 				expect(Object.values(output).some((value) => typeof value === 'function')).false;
 			});
 		});
+
 		describe('in', () => {
 			it('gt().in() combines with and', () => {
 				const expectedSqon: SQON = {
 					op: CombinationKeys.And,
 					content: [
 						{
-							op: ScalarFilterKeys.GreaterThan,
+							op: FilterKeys.GreaterThan,
 							content: {
 								fieldName: 'score',
 								value: 95,
 							},
 						},
 						{
-							op: ArrayFilterKeys.In,
+							op: FilterKeys.In,
 							content: {
 								fieldName: 'name',
 								value: ['Jim', 'Bob'],
@@ -504,7 +512,7 @@ describe('SQONBuilder', () => {
 			});
 			it('in(a).in(a) on same name collects into single filter', () => {
 				const expectedSqon: SQON = {
-					op: ArrayFilterKeys.In,
+					op: FilterKeys.In,
 					content: {
 						fieldName: 'name',
 						value: ['Jim', 'Bob', 'Greg'],
@@ -518,14 +526,14 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.And,
 					content: [
 						{
-							op: ArrayFilterKeys.In,
+							op: FilterKeys.In,
 							content: {
 								fieldName: 'class',
 								value: ['Bio', 'Math'],
 							},
 						},
 						{
-							op: ArrayFilterKeys.In,
+							op: FilterKeys.In,
 							content: {
 								fieldName: 'name',
 								value: ['Jim', 'Bob'],
@@ -541,14 +549,14 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.And,
 					content: [
 						{
-							op: ArrayFilterKeys.In,
+							op: FilterKeys.In,
 							content: {
 								fieldName: 'name',
 								value: ['Jim', 'Bob'],
 							},
 						},
 						{
-							op: ArrayFilterKeys.In,
+							op: FilterKeys.In,
 							content: {
 								fieldName: 'class',
 								value: ['Bio'],
@@ -566,14 +574,14 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.And,
 					content: [
 						{
-							op: ArrayFilterKeys.In,
+							op: FilterKeys.In,
 							content: {
 								fieldName: 'name',
 								value: ['Jim', 'Bob'],
 							},
 						},
 						{
-							op: ScalarFilterKeys.GreaterThan,
+							op: FilterKeys.GreaterThan,
 							content: {
 								fieldName: 'score',
 								value: 95,
@@ -586,7 +594,7 @@ describe('SQONBuilder', () => {
 			});
 			it('gt(a).gt(a) with same name collects into single filter with max value', () => {
 				const expectedSqon: SQON = {
-					op: ScalarFilterKeys.GreaterThan,
+					op: FilterKeys.GreaterThan,
 					content: {
 						fieldName: 'score',
 						value: 97,
@@ -600,14 +608,14 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.And,
 					content: [
 						{
-							op: ScalarFilterKeys.GreaterThan,
+							op: FilterKeys.GreaterThan,
 							content: {
 								fieldName: 'score',
 								value: 90,
 							},
 						},
 						{
-							op: ScalarFilterKeys.GreaterThan,
+							op: FilterKeys.GreaterThan,
 							content: {
 								fieldName: 'age',
 								value: 20,
@@ -625,14 +633,14 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.And,
 					content: [
 						{
-							op: ArrayFilterKeys.In,
+							op: FilterKeys.In,
 							content: {
 								fieldName: 'name',
 								value: ['Jim', 'Bob'],
 							},
 						},
 						{
-							op: ScalarFilterKeys.LesserThan,
+							op: FilterKeys.LesserThan,
 							content: {
 								fieldName: 'score',
 								value: 50,
@@ -645,7 +653,7 @@ describe('SQONBuilder', () => {
 			});
 			it('lt(a).lt(a) with same name collects into single filter with min value', () => {
 				const expectedSqon: SQON = {
-					op: ScalarFilterKeys.LesserThan,
+					op: FilterKeys.LesserThan,
 					content: {
 						fieldName: 'score',
 						value: 45,
@@ -659,14 +667,14 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.And,
 					content: [
 						{
-							op: ScalarFilterKeys.LesserThan,
+							op: FilterKeys.LesserThan,
 							content: {
 								fieldName: 'score',
 								value: 51,
 							},
 						},
 						{
-							op: ScalarFilterKeys.LesserThan,
+							op: FilterKeys.LesserThan,
 							content: {
 								fieldName: 'age',
 								value: 40,
@@ -684,14 +692,14 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.And,
 					content: [
 						{
-							op: ArrayFilterKeys.In,
+							op: FilterKeys.In,
 							content: {
 								fieldName: 'name',
 								value: ['Jim', 'Bob'],
 							},
 						},
 						{
-							op: ScalarFilterKeys.LesserThan,
+							op: FilterKeys.LesserThan,
 							content: {
 								fieldName: 'score',
 								value: 50,
@@ -710,14 +718,14 @@ describe('SQONBuilder', () => {
 							op: CombinationKeys.Or,
 							content: [
 								{
-									op: ScalarFilterKeys.GreaterThan,
+									op: FilterKeys.GreaterThan,
 									content: {
 										fieldName: 'score',
 										value: 95,
 									},
 								},
 								{
-									op: ArrayFilterKeys.In,
+									op: FilterKeys.In,
 									content: {
 										fieldName: 'name',
 										value: ['Jim', 'Bob'],
@@ -726,7 +734,7 @@ describe('SQONBuilder', () => {
 							],
 						},
 						{
-							op: ScalarFilterKeys.LesserThan,
+							op: FilterKeys.LesserThan,
 							content: {
 								fieldName: 'age',
 								value: 22,
@@ -746,14 +754,14 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.Or,
 					content: [
 						{
-							op: ArrayFilterKeys.In,
+							op: FilterKeys.In,
 							content: {
 								fieldName: 'name',
 								value: ['Jim', 'Bob'],
 							},
 						},
 						{
-							op: ScalarFilterKeys.LesserThan,
+							op: FilterKeys.LesserThan,
 							content: {
 								fieldName: 'score',
 								value: 50,
@@ -769,21 +777,21 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.Or,
 					content: [
 						{
-							op: ArrayFilterKeys.In,
+							op: FilterKeys.In,
 							content: {
 								fieldName: 'name',
 								value: ['Jim', 'Bob'],
 							},
 						},
 						{
-							op: ScalarFilterKeys.LesserThan,
+							op: FilterKeys.LesserThan,
 							content: {
 								fieldName: 'score',
 								value: 50,
 							},
 						},
 						{
-							op: ScalarFilterKeys.GreaterThan,
+							op: FilterKeys.GreaterThan,
 							content: {
 								fieldName: 'age',
 								value: 25,
@@ -803,7 +811,7 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.And,
 					content: [
 						{
-							op: ArrayFilterKeys.In,
+							op: FilterKeys.In,
 							content: {
 								fieldName: 'name',
 								value: ['Jim', 'Bob'],
@@ -813,7 +821,7 @@ describe('SQONBuilder', () => {
 							op: CombinationKeys.Not,
 							content: [
 								{
-									op: ScalarFilterKeys.LesserThan,
+									op: FilterKeys.LesserThan,
 									content: {
 										fieldName: 'score',
 										value: 50,
@@ -838,7 +846,7 @@ describe('SQONBuilder', () => {
 					op: CombinationKeys.And,
 					content: [
 						{
-							op: ArrayFilterKeys.In,
+							op: FilterKeys.In,
 							content: {
 								fieldName: 'name',
 								value: ['Jim', 'Bob'],
@@ -848,7 +856,7 @@ describe('SQONBuilder', () => {
 							op: CombinationKeys.Not,
 							content: [
 								{
-									op: ScalarFilterKeys.LesserThan,
+									op: FilterKeys.LesserThan,
 									content: {
 										fieldName: 'score',
 										value: 50,
@@ -860,7 +868,7 @@ describe('SQONBuilder', () => {
 							op: CombinationKeys.Not,
 							content: [
 								{
-									op: ScalarFilterKeys.GreaterThan,
+									op: FilterKeys.GreaterThan,
 									content: {
 										fieldName: 'age',
 										value: 25,
@@ -874,6 +882,56 @@ describe('SQONBuilder', () => {
 					.not(SQONBuilder.lt('score', 50))
 					.not(SQONBuilder.gt('age', 25));
 				expect(output).deep.contain(expectedSqon);
+			});
+		});
+		describe('removeExactFilter', () => {
+			it('removes matching filter', () => {
+				const filter: FilterOperator = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim'] } };
+				const base = SQONBuilder.gt('score', 90).in('name', 'Jim');
+				const output = base.removeExactFilter(filter);
+
+				const expected = SQONBuilder.gt('score', 90);
+
+				expect(output).deep.contain(expected.toValue());
+			});
+			it('removes matching filter with array values independent of order', () => {
+				const filter: FilterOperator = {
+					op: FilterKeys.In,
+					content: { fieldName: 'name', value: ['Jim', 'Bob', 'May', 'Sue'] },
+				};
+				const base = SQONBuilder.gt('score', 90).in('name', ['May', 'Sue', 'Bob', 'Jim']);
+				const output = base.removeExactFilter(filter);
+
+				const expected = SQONBuilder.gt('score', 90);
+
+				expect(output).deep.contain(expected.toValue());
+			});
+			it('transforms filter to empty `and` operator', () => {
+				const filter: FilterOperator = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim'] } };
+				const base = SQONBuilder.in('name', 'Jim');
+				const output = base.removeExactFilter(filter);
+
+				const expected = SQONBuilder.and([]);
+
+				expect(output).deep.contain(expected.toValue());
+			});
+			it('makes no change when filter is not found', () => {
+				const filter: FilterOperator = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim'] } };
+				const base = SQONBuilder.gt('score', 90).lt('age', 50);
+				const output = base.removeExactFilter(filter);
+
+				const expected = base;
+
+				expect(output).deep.contain(expected.toValue());
+			});
+			it('makes no change to non matching filter', () => {
+				const filter: FilterOperator = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim'] } };
+				const base = SQONBuilder.in('name', ['Jim', 'Bob']);
+				const output = base.removeExactFilter(filter);
+
+				const expected = base;
+
+				expect(output).deep.contain(expected.toValue());
 			});
 		});
 	});

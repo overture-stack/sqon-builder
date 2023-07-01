@@ -1,17 +1,21 @@
 import {
-	ArrayFilterKeys,
 	ArrayFilterValue,
 	CombinationKey,
 	CombinationKeys,
 	CombinationOperator,
+	FilterKeys,
+	FilterOperator,
 	GreaterThanFilter,
 	InFilter,
 	LesserThanFilter,
 	SQON,
 	ScalarFilterKeys,
 	ScalarFilterValue,
+	isCombination,
+	isFilter,
 } from './types/sqon';
 import asArray from './utils/asArray';
+import checkMatchingFilter from './utils/checkMatchingFilter';
 import { default as clonePojo } from './utils/cloneDeepPojo';
 import reduceSQON from './utils/reduceSQON';
 
@@ -23,6 +27,15 @@ type SQONBuilder = {
 	in: (fieldName: string, value: ArrayFilterValue) => SQONBuilder;
 	gt: (fieldName: string, value: ScalarFilterValue) => SQONBuilder;
 	lt: (fieldName: string, value: ScalarFilterValue) => SQONBuilder;
+
+	/* ===== Filter Modifiers ===== */
+	/**
+	 * Find exact matching filter at top level of SQON and remove it from the SQON.
+	 * For filters with an array of values, the order of the array will be ignored during matching.
+	 * @param filter
+	 * @returns
+	 */
+	removeExactFilter: (filter: FilterOperator) => SQONBuilder;
 
 	/**
 	 * Return a string with the JSON stringified representation of the current SQON
@@ -41,6 +54,22 @@ const createBuilder = (sqon: SQON): SQONBuilder => {
 
 	const toString = () => JSON.stringify(_sqon);
 	const toValue = () => _sqon;
+	const removeExactFilter = (filter: FilterOperator): SQONBuilder => {
+		if (isFilter(_sqon)) {
+			if (checkMatchingFilter(_sqon, filter)) {
+				// The entire sqon matches the filter to remove, so we will return an empty and combination operator
+				return SQONBuilder.and([]);
+			} else {
+				return createBuilder(_sqon);
+			}
+		} else {
+			const filteredContent = _sqon.content.filter(
+				(operator) => !isFilter(operator) || !checkMatchingFilter(operator, filter),
+			);
+			const updated: CombinationOperator = { op: _sqon.op, content: filteredContent };
+			return createBuilder(updated);
+		}
+	};
 	return {
 		and: _and(_sqon),
 		or: _or(_sqon),
@@ -50,6 +79,7 @@ const createBuilder = (sqon: SQON): SQONBuilder => {
 		lt: _lt(_sqon),
 		toString,
 		toValue,
+		removeExactFilter,
 		..._sqon,
 	};
 };
@@ -104,7 +134,7 @@ const _in =
 	(fieldName: string, value: ArrayFilterValue): SQONBuilder => {
 		// To standardize outputs, we will always transform single values into an array of 1 item
 		const filter: InFilter = {
-			op: ArrayFilterKeys.In,
+			op: FilterKeys.In,
 			content: { fieldName, value: asArray(value) },
 		};
 		return _and(original)(filter);
@@ -113,7 +143,7 @@ const _gt =
 	(original: SQON) =>
 	(fieldName: string, value: ScalarFilterValue): SQONBuilder => {
 		const filter: GreaterThanFilter = {
-			op: ScalarFilterKeys.GreaterThan,
+			op: FilterKeys.GreaterThan,
 			content: { fieldName, value },
 		};
 		return _and(original)(filter);
@@ -122,7 +152,7 @@ const _lt =
 	(original: SQON) =>
 	(fieldName: string, value: ScalarFilterValue): SQONBuilder => {
 		const filter: LesserThanFilter = {
-			op: ScalarFilterKeys.LesserThan,
+			op: FilterKeys.LesserThan,
 			content: { fieldName, value },
 		};
 		return _and(original)(filter);
