@@ -9,6 +9,7 @@ import SQONBuilder, {
 	ScalarFilterKeys,
 } from '../src';
 import reduceSQON from '../src/utils/reduceSQON';
+import { emptySQON } from '../src/SQONBuilder';
 
 describe('SQONBuilder', () => {
 	describe('Root', () => {
@@ -87,6 +88,12 @@ describe('SQONBuilder', () => {
 			// invalid op type for value
 			const input = 'bad json';
 			expect(() => SQONBuilder(input)).throw(SyntaxError);
+		});
+	});
+	describe('emptySQON', () => {
+		it('matches and() with empty array', () => {
+			const expected: SQON = { op: CombinationKeys.And, content: [] };
+			expect(emptySQON().toValue()).deep.equal(expected);
 		});
 	});
 	describe('Static functions', () => {
@@ -932,6 +939,135 @@ describe('SQONBuilder', () => {
 				const expected = base;
 
 				expect(output).deep.contain(expected.toValue());
+			});
+		});
+		describe('removeFilter', () => {
+			describe('all arguments', () => {
+				it('matching filter - replace with empty sqon', () => {
+					const salarInput = SQONBuilder.gt('score', 50);
+					const scalarOutput = salarInput.removeFilter('score', FilterKeys.GreaterThan, 50);
+
+					const arrayInput = SQONBuilder.in('name', ['Jim']);
+					const arrayOutput = arrayInput.removeFilter('name', FilterKeys.In, 'Jim');
+
+					expect(scalarOutput.toValue()).deep.equal(emptySQON().toValue());
+					expect(arrayOutput.toValue()).deep.equal(emptySQON().toValue());
+				});
+				it('non matching filter - no change', () => {
+					// 3 cases tested, each for a different property mis-match
+					const input = SQONBuilder.gt('score', 50);
+
+					const differentName = input.removeFilter('age', FilterKeys.GreaterThan, 50);
+					const differentOp = input.removeFilter('score', FilterKeys.LesserThan, 50);
+					const differentValue = input.removeFilter('score', FilterKeys.GreaterThan, 55);
+
+					expect(differentName.toValue()).deep.equal(input.toValue());
+					expect(differentOp.toValue()).deep.equal(input.toValue());
+					expect(differentValue.toValue()).deep.equal(input.toValue());
+				});
+				it('match found in content - removed from content list', () => {
+					const input = SQONBuilder.in('name', ['Jim']).gt('age', 20).lt('score', 50);
+
+					const removeScalar = input.removeFilter('age', FilterKeys.GreaterThan, 20);
+					const removeScalarExpected = SQONBuilder.in('name', ['Jim']).lt('score', 50);
+
+					const removeArray = input.removeFilter('name', FilterKeys.In, 'Jim');
+					const removeArrayExpected = SQONBuilder.gt('age', 20).lt('score', 50);
+
+					expect(removeScalar.toValue()).deep.equal(removeScalarExpected.toValue());
+					expect(removeArray.toValue()).deep.equal(removeArrayExpected.toValue());
+				});
+				it('no match found in content - no changes', () => {
+					const input = SQONBuilder.in('name', ['Jim']).gt('age', 20).lt('score', 50);
+
+					const removeScalar = input.removeFilter('age', FilterKeys.GreaterThan, 30);
+
+					const removeArray = input.removeFilter('name', FilterKeys.In, ['Bob']);
+
+					expect(removeScalar.toValue()).deep.equal(input.toValue());
+					expect(removeArray.toValue()).deep.equal(input.toValue());
+				});
+				it('partial match filter - removes matching values from array', () => {
+					const input = SQONBuilder.in('name', ['Jim', 'Bob', 'May']);
+					// Bonus in this filter, test removing a value not in original has no impact
+					const output = input.removeFilter('name', FilterKeys.In, ['Jim', 'Bob', 'Sue']);
+
+					const expected = SQONBuilder.in('name', ['May']);
+					expect(output.toValue()).deep.equal(expected.toValue());
+				});
+				it('partial match in content - removes matching values from array', () => {
+					const input = SQONBuilder.in('name', ['Jim', 'Bob', 'May']).gt('age', 20).lt('score', 50);
+					const output = input.removeFilter('name', FilterKeys.In, 'May');
+
+					const expected = SQONBuilder.in('name', ['Jim', 'Bob']).gt('age', 20).lt('score', 50);
+					expect(output.toValue()).deep.equal(expected.toValue());
+				});
+			});
+			describe('partial arguments - fieldName and op', () => {
+				it('matching filter - returns empty sqon', () => {
+					const salarInput = SQONBuilder.gt('score', 50);
+					const scalarOutput = salarInput.removeFilter('score', FilterKeys.GreaterThan);
+
+					const arrayInput = SQONBuilder.in('name', ['Jim']);
+					const arrayOutput = arrayInput.removeFilter('name', FilterKeys.In);
+
+					expect(scalarOutput.toValue()).deep.equal(emptySQON().toValue());
+					expect(arrayOutput.toValue()).deep.equal(emptySQON().toValue());
+				});
+
+				it('match found in content - removes match', () => {
+					const input = SQONBuilder.in('name', ['Jim']).gt('age', 20).lt('score', 50);
+
+					const removeScalar = input.removeFilter('age', FilterKeys.GreaterThan);
+					const removeScalarExpected = SQONBuilder.in('name', ['Jim']).lt('score', 50);
+
+					const removeArray = input.removeFilter('name', FilterKeys.In);
+					const removeArrayExpected = SQONBuilder.gt('age', 20).lt('score', 50);
+
+					expect(removeScalar.toValue()).deep.equal(removeScalarExpected.toValue());
+					expect(removeArray.toValue()).deep.equal(removeArrayExpected.toValue());
+				});
+				it('multiple with same name - removes match and leaves non match', () => {
+					const input = SQONBuilder.gt('age', 20).lt('age', 50);
+
+					const output = input.removeFilter('age', FilterKeys.GreaterThan);
+					const expected = SQONBuilder.lt('age', 50);
+
+					expect(output.toValue()).deep.equal(expected.toValue());
+				});
+			});
+			describe('partial arguments - fieldName only', () => {
+				it('matching filter - returns empty sqon', () => {
+					const salarInput = SQONBuilder.gt('score', 50);
+					const scalarOutput = salarInput.removeFilter('score');
+
+					const arrayInput = SQONBuilder.in('name', ['Jim']);
+					const arrayOutput = arrayInput.removeFilter('name');
+
+					expect(scalarOutput.toValue()).deep.equal(emptySQON().toValue());
+					expect(arrayOutput.toValue()).deep.equal(emptySQON().toValue());
+				});
+
+				it('match found in content - removes match', () => {
+					const input = SQONBuilder.in('name', ['Jim']).gt('age', 20).lt('score', 50);
+
+					const removeScalar = input.removeFilter('age');
+					const removeScalarExpected = SQONBuilder.in('name', ['Jim']).lt('score', 50);
+
+					const removeArray = input.removeFilter('name');
+					const removeArrayExpected = SQONBuilder.gt('age', 20).lt('score', 50);
+
+					expect(removeScalar.toValue()).deep.equal(removeScalarExpected.toValue());
+					expect(removeArray.toValue()).deep.equal(removeArrayExpected.toValue());
+				});
+				it('multiple with same name - removes all', () => {
+					const input = SQONBuilder.in('name', ['Jim']).gt('age', 20).lt('age', 50);
+
+					const output = input.removeFilter('age');
+					const expected = SQONBuilder.in('name', ['Jim']);
+
+					expect(output.toValue()).deep.equal(expected.toValue());
+				});
 			});
 		});
 	});
