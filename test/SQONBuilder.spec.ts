@@ -940,6 +940,15 @@ describe('SQONBuilder', () => {
 
 				expect(output).deep.contain(expected.toValue());
 			});
+			it('makes no change if matching filter is in a nested opeartor', () => {
+				const filter: FilterOperator = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim'] } };
+				const base = SQONBuilder.gt('age', 20).or(filter).lt('score', 50);
+				const output = base.removeExactFilter(filter);
+
+				const expected = base;
+
+				expect(output).deep.contain(expected.toValue());
+			});
 		});
 		describe('removeFilter', () => {
 			describe('all arguments', () => {
@@ -1047,7 +1056,6 @@ describe('SQONBuilder', () => {
 					expect(scalarOutput.toValue()).deep.equal(emptySQON().toValue());
 					expect(arrayOutput.toValue()).deep.equal(emptySQON().toValue());
 				});
-
 				it('match found in content - removes match', () => {
 					const input = SQONBuilder.in('name', ['Jim']).gt('age', 20).lt('score', 50);
 
@@ -1067,6 +1075,15 @@ describe('SQONBuilder', () => {
 					const expected = SQONBuilder.in('name', ['Jim']);
 
 					expect(output.toValue()).deep.equal(expected.toValue());
+				});
+				it('match in nested operator - no change', () => {
+					const filter: FilterOperator = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim'] } };
+					const base = SQONBuilder.gt('age', 20).or(filter).lt('score', 50);
+					const output = base.removeFilter(filter.content.fieldName);
+
+					const expected = base;
+
+					expect(output).deep.contain(expected.toValue());
 				});
 			});
 		});

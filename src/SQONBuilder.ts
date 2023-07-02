@@ -35,11 +35,24 @@ type SQONBuilder = {
 	/**
 	 * Find exact matching filter at top level of SQON and remove it from the SQON.
 	 * For filters with an array of values, the order of the array will be ignored during matching.
+	 *
+	 * Note: This only looks for filters at the root of the sqon or in the content of the top level combination operator,
+	 * This will not search recursively through the SQON.
 	 * @param filter
 	 * @returns
 	 */
 	removeExactFilter: (filter: FilterOperator) => SQONBuilder;
 
+	/**
+	 * Find partial matching filter based on optional arguments and remove them from the SQON.
+	 *
+	 * Note: This only looks for filters at the root of the sqon or in the content of the top level combination operator,
+	 * This will not search recursively through the SQON.
+	 * @param fieldName
+	 * @param operator
+	 * @param value
+	 * @returns
+	 */
 	removeFilter: (fieldName: string, operator?: FilterKey, value?: FilterValue) => SQONBuilder;
 
 	/**
