@@ -19,16 +19,16 @@ Arranger 3 clarified the SQON property naming, changing `field` to be `fieldName
 		- [Combining Multiple Filters](#combining-multiple-filters)
 		- [SQON Output to String or Object](#sqon-output-to-string-or-object)
 	- [API](#api)
-		- [Root](#root)
-		- [Filters](#filters-1)
-			- [SQONBuilder.in(fieldName, values)](#sqonbuilderinfieldname-values)
-			- [SQONBuilder.gt(fieldName, value)](#sqonbuildergtfieldname-value)
-			- [SQONBuilder.lt(fieldName, value)](#sqonbuilderltfieldname-value)
-		- [Combinations](#combinations)
-			- [SQONBuilder.and(sqon)](#sqonbuilderandsqon)
-			- [SQONBuilder.or(sqon)](#sqonbuilderorsqon)
-			- [SQONBuilder.not(sqon)](#sqonbuildernotsqon)
-		- [From](#from)
+		- [`SQONBuilder(sqon: SQONBuilder | SQON | string)`](#sqonbuildersqon-sqonbuilder--sqon--string)
+			- [In Filter: `SQONBuilder.in(fieldName: string, value: ArrayFilterValue)`](#in-filter-sqonbuilderinfieldname-string-value-arrayfiltervalue)
+			- [GreaterThan filter: `SQONBuilder.gt(fieldName, value)`](#greaterthan-filter-sqonbuildergtfieldname-value)
+			- [LesserThan Filter: `SQONBuilder.lt(fieldName, value)`](#lesserthan-filter-sqonbuilderltfieldname-value)
+			- [And Combination: `SQONBuilder.and(sqon)`](#and-combination-sqonbuilderandsqon)
+			- [Or Combination: `SQONBuilder.or(sqon)`](#or-combination-sqonbuilderorsqon)
+			- [Not Combination: `SQONBuilder.not(sqon)`](#not-combination-sqonbuildernotsqon)
+		- [From: `SQONBuilder.from(input: unknown)`](#from-sqonbuilderfrominput-unknown)
+		- [Filter Modifiers](#filter-modifiers)
+			- [`removeExactFilter(filter: FilterOperator)`](#removeexactfilterfilter-filteroperator)
 	- [Types and SQON Validation](#types-and-sqon-validation)
 		- [SQON Type Composition](#sqon-type-composition)
 			- [FilterOperators](#filteroperators)
@@ -197,65 +197,59 @@ builder.toValue();
 
 ## API
 
-### Root
+### `SQONBuilder(sqon: SQONBuilder | SQON | string)`
+The package default export is the `SQONBuilder`. This is a function that will generate a `SQONBuilder` object from another `SQONBuilder`, a `SQON` object, or JSON `string`.
 
-The `SQONBuilder` is a function that will create a new builder from another SQONBuilder, SQON object, or JSON string.
+> Note: This will attempt to parse the provided string as JSON and will then validate that the contents are a valid SQON. If the provided string cannot be parsed from JSON a `SyntaxError` will be thrown. If the parsed string is not a valid SQON, a [`ZodError`](https://zod.dev/ERROR_HANDLING) will be thrown.
 
-Example: `const builder = SQONBuilder(sqonJson);`
+Example: `const builder: SQONBuilder = SQONBuilder({op: 'in', content: {fieldName: 'name', value: ['Jim']}});`
 
-All filters and combination methods described here can be called from the returned builder object.
+The `SQONBuilder` function also provides many static functions that can be used to generate a new SQONBuilder without having a SQON to start with.
 
-Example: `builder.in('name','Jim').gt('score',95);`
+Example: `const builder: SQONBuilder = SQONBuilder.in('name', 'Jim');`
 
-This will throw an error if the provided value is not a valid SQON or JSON string.
+The `SQONBuilder` object that is returned stores the value of the generated SQON which can be accessed as a string with `.toString()` or as an object with `.toValue()`. From the `SQONBuilder` object you can now combine the stored SQON value with other filters or combination operations.
 
-### Filters
+Example: `builder.lt('age','30').gt('score',95);`
 
-#### SQONBuilder.in(fieldName, values)
 
-Creates a filter requiring the given field to have one of the given values. The value can be a single string or number value, or an array of strings or numbers.
+#### In Filter: `SQONBuilder.in(fieldName: string, value: ArrayFilterValue)`
+
+Creates a filter requiring the given field to have one of the given values. The value matches the `ArrayFilterValue` type which representes a string, a number, or an array of strings and numbers.
 
 Example: `SQONBuilder.in('name',['Jim','Bob'])`
 
-#### SQONBuilder.gt(fieldName, value)
+#### GreaterThan filter: `SQONBuilder.gt(fieldName, value)`
 
 Greater Than operator. Create a filter requiring the given field to be greater than the given value
 
 Example: `SQONBuilder.gt('age',21)`
 
-#### SQONBuilder.lt(fieldName, value)
+#### LesserThan Filter: `SQONBuilder.lt(fieldName, value)`
 
 Lesser Than operator. Create a filter requiring the given field to be lesser than the given value
 
 Example: `SQONBuilder.lt('count', 100)`
 
-### Combinations
-
-Combinations can be initiaed from the SQON class or from a SQON instance.
-
-If this is called from an instance, the method will accept one SQON or an array, and the instance can be considered grouped with the SQONs provided in the arguments.
-
-If this is called from the class, an array of SQONs is required to be passed.
-
-#### SQONBuilder.and(sqon)
+#### And Combination: `SQONBuilder.and(sqon)`
 
 All filters in the resulting SQON must be true.
 
 Example: `SQONBuilder.and( [someSqon, anotherSqon] )`
 
-#### SQONBuilder.or(sqon)
+#### Or Combination: `SQONBuilder.or(sqon)`
 
 At least one filter in the resulting SQON must be true.
 
 Example: `SQONBuilder.or( [someSqon, anotherSqon] )`
 
-#### SQONBuilder.not(sqon)
+#### Not Combination: `SQONBuilder.not(sqon)`
 
 None of the filters in the resulting SQON can be true.
 
 Example: `SQONBuilder.not( [someSqon] )`
 
-### From
+### From: `SQONBuilder.from(input: unknown)`
 
 Build a new SQON from a string or from a JSON object.
 
@@ -267,7 +261,27 @@ SQONBuilder.from(
 );
 ```
 
-This will throw an error if the provided value is not a valid SQON or JSON string.
+This differs from the default function because it will accept any input. The use case for this function is when you have a JS object that could potentially be a valid SQON, you can pass this `uncheckedObject` to `SQONBuilder.from(uncheckedObject)` and validation will be performed before the `SQONBuilder` is returned, if possible.
+
+If the provided string cannot be parsed from JSON a `SyntaxError` will be thrown.
+
+If the provided object or parsed string is not a valid SQON, a [`ZodError`](https://zod.dev/ERROR_HANDLING) will be thrown.
+
+### Filter Modifiers
+
+#### `removeExactFilter(filter: FilterOperator)`
+Find exact matching filter and remove it from the SQON.
+
+For filters with an array of values, the order of the array will be ignored during matching.
+
+Note: This only looks for filters at the root of the sqon or in the content of the top level combination operator.
+This will not search recursively through the SQON.
+
+```ts
+const initial = SQONBuilder.in('name', 'Jim').gt('score', 50);
+initial.removeFilter({op: FilterKeys.In, content: {fieldName: 'name', value: ['Jim']}});
+// {op: 'gt', content: {fieldName: 'score', value: 50}}
+```
 
 ## Types and SQON Validation
 
