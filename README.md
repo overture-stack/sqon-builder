@@ -320,7 +320,7 @@ The `content` property of a `FilterOperator` is a single object of the form:
 }
 ```
 
-Some filters accept an array of values, number or string, and some only accept a single number. These are differentiated in this library by the types `ArrayFilterOperator` and `ScalarFilterOperator`. You also have access to all the corresponding operation keys in the `FilterKeys`, `ArrayFilterKeys`, and `ScalarFilterKeys` records.
+Some filters accept an array of values, number or string, and some only accept a single number. These are differentiated in this library by the types `ArrayFilter` and `ScalarFilter`. You also have access to all the corresponding operation keys in the `FilterKeys`, `ArrayFilterKeys`, and `ScalarFilterKeys` records.
 
 #### CombinationOperators
 
