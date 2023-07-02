@@ -8,9 +8,11 @@ import {
 	FilterKeys,
 	FilterOperator,
 	FilterValue,
+	FilterValueMap,
 	GreaterThanFilter,
 	InFilter,
 	LesserThanFilter,
+	Operator,
 	SQON,
 	ScalarFilterValue,
 	isArrayFilter,
@@ -20,6 +22,7 @@ import {
 import asArray from './utils/asArray';
 import checkMatchingFilter, { checkMatchingArrays } from './utils/checkMatchingFilter';
 import cloneDeepValues from './utils/cloneDeepValues';
+import { createFilter } from './utils/createFilter';
 import reduceSQON from './utils/reduceSQON';
 
 type SQONBuilder = {
@@ -36,7 +39,7 @@ type SQONBuilder = {
 	 * Find exact matching filter at top level of SQON and remove it from the SQON.
 	 * For filters with an array of values, the order of the array will be ignored during matching.
 	 *
-	 * Note: This only looks for filters at the root of the sqon or in the content of the top level combination operator,
+	 * Note: This only looks for filters at the root of the sqon or in the content of the top level combination operator.
 	 * This will not search recursively through the SQON.
 	 * @param filter
 	 * @returns
@@ -44,16 +47,36 @@ type SQONBuilder = {
 	removeExactFilter: (filter: FilterOperator) => SQONBuilder;
 
 	/**
-	 * Find partial matching filter based on optional arguments and remove them from the SQON.
+	 * Find partial matching filters based on optional arguments and remove them from the SQON.
 	 *
-	 * Note: This only looks for filters at the root of the sqon or in the content of the top level combination operator,
+	 * If only the fieldName is provided, all filters on that field will be removed.
+	 *
+	 * If the fieldName and operator are provided, then a filter matching that fieldName and op will be removed
+	 * (shouldn't ever be more than one in an operator due to the SQON reducer).
+	 *
+	 * If values are provided, then a filter exactly matching all the arguments will be removed.
+	 * If a filter is found that matches the fieldName and op, then all matching values form the provided array will
+	 * be removed from the filter. This lets you remove select values from an array filter without removing the entire
+	 * filter.
+	 *
+	 * Note: This only looks for filters at the root of the sqon or in the content of the top level combination operator.
 	 * This will not search recursively through the SQON.
 	 * @param fieldName
-	 * @param operator
+	 * @param op
 	 * @param value
 	 * @returns
 	 */
-	removeFilter: (fieldName: string, operator?: FilterKey, value?: FilterValue) => SQONBuilder;
+	removeFilter: (fieldName: string, op?: FilterKey, value?: FilterValue) => SQONBuilder;
+
+	/**
+	 * Add a specific filter to the content of the top level operator, or replace a matching filter (same `op` and `fieldName`) with the new value specified.
+	 * If the current SQON is just a filter, then the existing filter and this new filter will be combined with an `and` operator.
+	 * @param fieldName
+	 * @param operator Filter key string
+	 * @param value Filter value of a type that corresponds to the provided operator
+	 * @returns
+	 */
+	setFilter: <Key extends FilterKey>(fieldName: string, op: Key, value: FilterValueMap[Key]) => SQONBuilder;
 
 	/**
 	 * Return a string with the JSON stringified representation of the current SQON
@@ -67,7 +90,7 @@ type SQONBuilder = {
 	toValue: () => SQON;
 } & SQON;
 
-export const emptySQON = () => SQONBuilder.and([]);
+export const emptySQON = (): Operator => ({ op: CombinationKeys.And, content: [] });
 
 const createBuilder = (sqon: SQON): SQONBuilder => {
 	const _sqon = reduceSQON(cloneDeepValues(sqon));
@@ -81,7 +104,7 @@ const createBuilder = (sqon: SQON): SQONBuilder => {
 		if (isFilter(_sqon)) {
 			if (checkMatchingFilter(_sqon, filter)) {
 				// The entire sqon matches the filter to remove, so we will return an empty and combination operator
-				return emptySQON();
+				return createBuilder(emptySQON());
 			} else {
 				return createBuilder(_sqon);
 			}
@@ -98,18 +121,10 @@ const createBuilder = (sqon: SQON): SQONBuilder => {
 		// To prevent repeatedly converting value into an array, do it once at the top
 		// This is now our list of values we want to filter:
 		const valuesToFilter = value !== undefined ? asArray(value) : undefined;
-		console.log('valuesToFilter', valuesToFilter);
 
 		/* ===== Private Functions for Matching ===== */
 		// Conditional matching based on all the provided arguments
 		function isMatchArgs(filter: FilterOperator) {
-			console.log('fieldName === filter.content.fieldName', filter, fieldName === filter.content.fieldName);
-			console.log('(op === undefined || op === filter.op)', filter, op === undefined || op === filter.op);
-			console.log(
-				'(valuesToFilter === undefined || checkMatchingArrays(valuesToFilter, asArray(filter.content.value)))',
-				filter,
-				valuesToFilter === undefined || checkMatchingArrays(valuesToFilter, asArray(filter.content.value)),
-			);
 			return (
 				fieldName === filter.content.fieldName &&
 				(op === undefined || op === filter.op) &&
@@ -134,7 +149,7 @@ const createBuilder = (sqon: SQON): SQONBuilder => {
 		if (isFilter(_sqon)) {
 			if (isMatchArgs(_sqon)) {
 				// Remove entire sqon since it matches the filter args
-				return emptySQON();
+				return createBuilder(emptySQON());
 			} else if (valuesToFilter !== undefined && isArrayFilter(_sqon) && isPartialMatchArgs(_sqon)) {
 				// Filter wasnt removed, but it matches partially so we can filter out specific filter values
 				const output = filterValuesFromFilter(_sqon, valuesToFilter);
@@ -143,27 +158,51 @@ const createBuilder = (sqon: SQON): SQONBuilder => {
 				// No match, no change
 				return createBuilder(_sqon);
 			}
-		} else {
-			console.log('is combo', JSON.stringify(_sqon));
-			// Filter content to remove all exact matches
-			const filteredContent = _sqon.content.filter((operator) => isCombination(operator) || !isMatchArgs(operator));
-			console.log('filteredContent', JSON.stringify(filteredContent));
+		}
 
-			if (valuesToFilter !== undefined) {
-				// we also need to find partial matches for array filters and remove any values that are included in our values array here
-				// map over the filtered content to find any partial matches, then filter values out of the partial match, otherwise return the unmodified operator
-				const outputContent = filteredContent.map((operator) =>
-					isArrayFilter(operator) && isPartialMatchArgs(operator)
-						? filterValuesFromFilter(operator, valuesToFilter)
-						: operator,
-				);
-				const updated: CombinationOperator = { op: _sqon.op, content: outputContent };
-				return createBuilder(updated);
+		// Filter content to remove all exact matches
+		const filteredContent = _sqon.content.filter((operator) => isCombination(operator) || !isMatchArgs(operator));
+
+		if (valuesToFilter !== undefined) {
+			// we also need to find partial matches for array filters and remove any values that are included in our values array here
+			// map over the filtered content to find any partial matches, then filter values out of the partial match, otherwise return the unmodified operator
+			const outputContent = filteredContent.map((operator) =>
+				isArrayFilter(operator) && isPartialMatchArgs(operator)
+					? filterValuesFromFilter(operator, valuesToFilter)
+					: operator,
+			);
+			const updated: CombinationOperator = { op: _sqon.op, content: outputContent };
+			return createBuilder(updated);
+		} else {
+			const updated: CombinationOperator = { op: _sqon.op, content: filteredContent };
+			return createBuilder(updated);
+		}
+	};
+
+	const setFilter = <Key extends FilterKey>(fieldName: string, op: Key, value: FilterValueMap[Key]): SQONBuilder => {
+		if (isFilter(_sqon)) {
+			// Builder is just one filter, check if it matches our applied filter and replace it, or join them both with an and
+			if (_sqon.op === op && _sqon.content.fieldName === fieldName) {
+				return createBuilder(createFilter(fieldName, op, value));
 			} else {
-				const updated: CombinationOperator = { op: _sqon.op, content: filteredContent };
-				return createBuilder(updated);
+				return SQONBuilder.and([_sqon, createFilter(fieldName, op, value)]);
 			}
 		}
+
+		let found = false;
+		const updatedContent = _sqon.content.map((operator) => {
+			if (isFilter(operator) && operator.op === op && operator.content.fieldName === fieldName) {
+				found = true;
+				const replacement = cloneDeepValues(operator);
+				replacement.content.value = value;
+				return replacement;
+			}
+			return operator;
+		});
+		if (!found) {
+			updatedContent.push(createFilter(fieldName, op, value));
+		}
+		return createBuilder({ op: _sqon.op, content: updatedContent });
 	};
 
 	return {
@@ -173,10 +212,11 @@ const createBuilder = (sqon: SQON): SQONBuilder => {
 		in: _in(_sqon),
 		gt: _gt(_sqon),
 		lt: _lt(_sqon),
-		toString,
-		toValue,
 		removeExactFilter,
 		removeFilter,
+		setFilter,
+		toString,
+		toValue,
 		..._sqon,
 	};
 };
@@ -259,15 +299,15 @@ const SQONBuilder = (sqon: SQONBuilder | SQON | string): SQONBuilder => {
 	if (typeof sqon === 'string') {
 		return _from(sqon);
 	} else {
-		return _from(cloneDeepValues(sqon)); // TODO: make cloneDeep copy everything and have a second step strip functions
+		return createBuilder(sqon); // TODO: make cloneDeep copy everything and have a second step strip functions
 	}
 };
-SQONBuilder.and = _and({ op: CombinationKeys.And, content: [] });
-SQONBuilder.or = _or({ op: CombinationKeys.And, content: [] });
-SQONBuilder.not = _not({ op: CombinationKeys.And, content: [] });
-SQONBuilder.in = _in({ op: CombinationKeys.And, content: [] });
-SQONBuilder.gt = _gt({ op: CombinationKeys.And, content: [] });
-SQONBuilder.lt = _lt({ op: CombinationKeys.And, content: [] });
+SQONBuilder.and = _and(emptySQON());
+SQONBuilder.or = _or(emptySQON());
+SQONBuilder.not = _not(emptySQON());
+SQONBuilder.in = _in(emptySQON());
+SQONBuilder.gt = _gt(emptySQON());
+SQONBuilder.lt = _lt(emptySQON());
 SQONBuilder.from = _from;
 
 export default SQONBuilder;

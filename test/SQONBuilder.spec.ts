@@ -67,7 +67,7 @@ describe('SQONBuilder', () => {
 			expect(builder.content).not.equal(input.content);
 			expect(builder).deep.contain(input.toValue());
 		});
-		it('accepts a valid JSON string', () => {
+		it('accepts a valid JSON string of filter', () => {
 			const input = `{"op":"in","content":{"fieldName":"name","value":["Jim"]}}`;
 			const expectedSqon: SQON = {
 				op: FilterKeys.In,
@@ -75,6 +75,24 @@ describe('SQONBuilder', () => {
 					fieldName: 'name',
 					value: ['Jim'],
 				},
+			};
+			const builder = SQONBuilder(input);
+			expect(builder).deep.contains(expectedSqon);
+		});
+		it('accepts a valid JSON string of complex sqon', () => {
+			const input = `{"op":"and","content":[{"op":"or","content":[{"op":"gt","content":{"fieldName":"age","value":30}},{"op":"lt","content":{"fieldName":"score","value":50}}]},{"op":"not","content":[{"op":"in","content":{"fieldName":"name","value":["Jim"]}}]}]}`;
+			const expectedSqon: SQON = {
+				op: 'and',
+				content: [
+					{
+						op: 'or',
+						content: [
+							{ op: 'gt', content: { fieldName: 'age', value: 30 } },
+							{ op: 'lt', content: { fieldName: 'score', value: 50 } },
+						],
+					},
+					{ op: 'not', content: [{ op: 'in', content: { fieldName: 'name', value: ['Jim'] } }] },
+				],
 			};
 			const builder = SQONBuilder(input);
 			expect(builder).deep.contains(expectedSqon);
@@ -93,7 +111,7 @@ describe('SQONBuilder', () => {
 	describe('emptySQON', () => {
 		it('matches and() with empty array', () => {
 			const expected: SQON = { op: CombinationKeys.And, content: [] };
-			expect(emptySQON().toValue()).deep.equal(expected);
+			expect(emptySQON()).deep.equal(expected);
 		});
 	});
 	describe('Static functions', () => {
@@ -959,8 +977,8 @@ describe('SQONBuilder', () => {
 					const arrayInput = SQONBuilder.in('name', ['Jim']);
 					const arrayOutput = arrayInput.removeFilter('name', FilterKeys.In, 'Jim');
 
-					expect(scalarOutput.toValue()).deep.equal(emptySQON().toValue());
-					expect(arrayOutput.toValue()).deep.equal(emptySQON().toValue());
+					expect(scalarOutput.toValue()).deep.equal(emptySQON());
+					expect(arrayOutput.toValue()).deep.equal(emptySQON());
 				});
 				it('non matching filter - no change', () => {
 					// 3 cases tested, each for a different property mis-match
@@ -1020,8 +1038,8 @@ describe('SQONBuilder', () => {
 					const arrayInput = SQONBuilder.in('name', ['Jim']);
 					const arrayOutput = arrayInput.removeFilter('name', FilterKeys.In);
 
-					expect(scalarOutput.toValue()).deep.equal(emptySQON().toValue());
-					expect(arrayOutput.toValue()).deep.equal(emptySQON().toValue());
+					expect(scalarOutput.toValue()).deep.equal(emptySQON());
+					expect(arrayOutput.toValue()).deep.equal(emptySQON());
 				});
 
 				it('match found in content - removes match', () => {
@@ -1053,8 +1071,8 @@ describe('SQONBuilder', () => {
 					const arrayInput = SQONBuilder.in('name', ['Jim']);
 					const arrayOutput = arrayInput.removeFilter('name');
 
-					expect(scalarOutput.toValue()).deep.equal(emptySQON().toValue());
-					expect(arrayOutput.toValue()).deep.equal(emptySQON().toValue());
+					expect(scalarOutput.toValue()).deep.equal(emptySQON());
+					expect(arrayOutput.toValue()).deep.equal(emptySQON());
 				});
 				it('match found in content - removes match', () => {
 					const input = SQONBuilder.in('name', ['Jim']).gt('age', 20).lt('score', 50);
@@ -1085,6 +1103,32 @@ describe('SQONBuilder', () => {
 
 					expect(output).deep.contain(expected.toValue());
 				});
+			});
+		});
+		describe('setFilter', () => {
+			it('matching filter - replaces existing sqon', () => {
+				const base = SQONBuilder.in('name', ['Jim', 'Bob']);
+				const output = base.setFilter('name', FilterKeys.In, ['May', 'Sue']);
+				const expected = SQONBuilder.in('name', ['May', 'Sue']);
+				expect(output.toValue()).deep.equal(expected.toValue());
+			});
+			it('non-matching filter - combines in `and` ', () => {
+				const base = SQONBuilder.gt('age', 50);
+				const output = base.setFilter('name', FilterKeys.In, ['May', 'Sue']);
+				const expected = base.in('name', ['May', 'Sue']);
+				expect(output.toValue()).deep.equal(expected.toValue());
+			});
+			it('match in content - replaces match values', () => {
+				const base = SQONBuilder.gt('age', 50).in('name', ['Jim', 'Bob']);
+				const output = base.setFilter('name', FilterKeys.In, ['Jim', 'Sue']);
+				const expected = SQONBuilder.gt('age', 50).in('name', ['Jim', 'Sue']);
+				expect(output.toValue()).deep.equal(expected.toValue());
+			});
+			it('no match in content - adds filter', () => {
+				const base = SQONBuilder.gt('age', 50).in('name', ['Jim', 'Bob']);
+				const output = base.setFilter('score', FilterKeys.LesserThan, 90);
+				const expected = SQONBuilder.gt('age', 50).in('name', ['Jim', 'Bob']).lt('score', 90);
+				expect(output.toValue()).deep.equal(expected.toValue());
 			});
 		});
 	});
