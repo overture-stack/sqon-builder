@@ -19,6 +19,10 @@ describe('index', () => {
 				},
 			});
 		});
+		it('emptySQON is exported', () => {
+			const { default: SQONBuilder } = Exports;
+			expect(typeof SQONBuilder).equal('function');
+		});
 		it('reduceSQON is exported', () => {
 			const { reduceSQON } = Exports;
 			expect(typeof reduceSQON).equal('function');
