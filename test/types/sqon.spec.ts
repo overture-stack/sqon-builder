@@ -5,8 +5,11 @@ import {
 	FilterKeys,
 	FilterOperator,
 	isArrayFilter,
+	isArrayFilterKey,
 	isCombination,
 	isFilter,
+	isScalarFilter,
+	isScalarFilterKey,
 } from '../../src/types/sqon';
 
 const combo: CombinationOperator = { op: CombinationKeys.And, content: [] };
@@ -42,6 +45,35 @@ describe('types/sqon', () => {
 			});
 			it('rejects scalar filter', () => {
 				expect(isArrayFilter(scalarFilter)).false;
+			});
+		});
+		describe('isScalarFilter', () => {
+			it('validates scalar filter', () => {
+				expect(isScalarFilter(scalarFilter)).true;
+			});
+			it('rejects combination operator', () => {
+				expect(isScalarFilter(arrayFilter)).false;
+			});
+			it('rejects array filter', () => {
+				expect(isScalarFilter(combo)).false;
+			});
+		});
+		describe('isArrayFilterKey', () => {
+			it('validates array keys', () => {
+				expect(isArrayFilterKey(FilterKeys.In)).true;
+			});
+			it('rejects scalar keys', () => {
+				expect(isArrayFilterKey(FilterKeys.GreaterThan)).false;
+				expect(isArrayFilterKey(FilterKeys.LesserThan)).false;
+			});
+		});
+		describe('isScalarFilterKey', () => {
+			it('validates array keys', () => {
+				expect(isScalarFilterKey(FilterKeys.GreaterThan)).true;
+				expect(isScalarFilterKey(FilterKeys.LesserThan)).true;
+			});
+			it('rejects scalar keys', () => {
+				expect(isScalarFilterKey(FilterKeys.In)).false;
 			});
 		});
 	});

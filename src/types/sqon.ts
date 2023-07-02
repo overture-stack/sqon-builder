@@ -16,7 +16,7 @@ export const ScalarFilterKeys = {
 export type ScalarFilterKey = Values<typeof ScalarFilterKeys>;
 
 export type FilterKey = ScalarFilterKey | ArrayFilterKey;
-export const FilterKeys = Object.assign(ArrayFilterKeys, ScalarFilterKeys);
+export const FilterKeys = Object.assign({}, ArrayFilterKeys, ScalarFilterKeys);
 
 export const CombinationKeys = {
 	And: 'and',
@@ -25,7 +25,7 @@ export const CombinationKeys = {
 } as const;
 export type CombinationKey = Values<typeof CombinationKeys>;
 
-export const Keys = Object.assign(ArrayFilterKeys, ScalarFilterKeys, CombinationKeys);
+export const Keys = Object.assign({}, ArrayFilterKeys, ScalarFilterKeys, CombinationKeys);
 
 /* ****************** *
  * Filters            *
@@ -51,6 +51,12 @@ export const ScalarFilterValue = zod.number();
 
 export type FilterValue = zod.infer<typeof FilterValue>;
 export const FilterValue = zod.union([ArrayFilterValue, ScalarFilterValue]);
+
+export type FilterValueMap = {
+	[ArrayFilterKeys.In]: ArrayFilterValue;
+	[ScalarFilterKeys.GreaterThan]: ScalarFilterValue;
+	[ScalarFilterKeys.LesserThan]: ScalarFilterValue;
+};
 
 /* ===== Specific Filters ==== */
 
@@ -119,12 +125,20 @@ export const SQON = Operator;
 export type SQON = Clean<Operator>;
 
 /* ===== Convenient Type Guards ===== */
-export const isCombination = (operator: Operator): operator is CombinationOperator => {
-	return CombinationOperator.safeParse(operator).success;
-};
-export const isFilter = (operator: Operator): operator is FilterOperator => {
-	return FilterOperator.safeParse(operator).success;
-};
-export const isArrayFilter = (operator: Operator): operator is ArrayFilter => {
-	return ArrayFilter.safeParse(operator).success;
-};
+export const isCombination = (operator: Operator): operator is CombinationOperator =>
+	CombinationOperator.safeParse(operator).success;
+
+export const isFilter = (operator: Operator): operator is FilterOperator => FilterOperator.safeParse(operator).success;
+
+export const isArrayFilter = (operator: Operator): operator is ArrayFilter => ArrayFilter.safeParse(operator).success;
+
+export const isScalarFilter = (operator: Operator): operator is ScalarFilter =>
+	ScalarFilter.safeParse(operator).success;
+
+const arrayFilterKeys: string[] = Object.values(ArrayFilterKeys);
+export const isArrayFilterKey = (input: unknown): input is ArrayFilterKey =>
+	typeof input === 'string' && arrayFilterKeys.includes(input);
+
+const scalarFilterKeys: string[] = Object.values(ScalarFilterKeys);
+export const isScalarFilterKey = (input: unknown): input is ScalarFilterKey =>
+	typeof input === 'string' && scalarFilterKeys.includes(input);
