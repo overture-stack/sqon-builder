@@ -34,7 +34,8 @@ Arranger 3 clarified the SQON property naming, changing `field` to be `fieldName
 			- [FilterOperators](#filteroperators)
 			- [CombinationOperators](#combinationoperators)
 			- [Convenient Type Guards](#convenient-type-guards)
-	- [SQON Reduction](#sqon-reduction)
+		- [SQON Reduction](#sqon-reduction)
+		- [Check Matching Filter](#check-matching-filter)
 
 
 ## How to Use
@@ -362,11 +363,13 @@ if(isCombination(sqon)) {
 }
 ```
 
-## SQON Reduction
+### SQON Reduction
 
-SQONs produced by the SQON builder are run through a reducer function which will remove redundant operators and collect similar filters. For example, if there is an `and` combination wrapping a single filter, the `and` operator can be removed and replaced by the single filter.
+`reduceSQON(sqon: SQON) => SQON`
 
-The reducer function is exported so if you want to reduce a SQON provided by another source:
+The `reduceSQON` function is used internally by the SQON builder to reduce the complexity of a SQON by removing redundant operators and collecting similar filters. For example, if there is an `and` combination wrapping a single filter, the `and` operator can be removed and replaced by the single filter.
+
+The reducer function is exported so you are able to run the reduction algorithm on SQONs independent of the SQONBuilder.
 
 ```ts
 import { reduceSQON } from '@overture-stack/sqon-builder`;
@@ -375,4 +378,18 @@ const sqon: SQON = { op: 'and', 'content': [ { op: 'lt', content: { fieldName: '
 
 const reduced = reduceSQON(sqon);
 // { op: 'lt', content: { fieldName: 'age', value: 100 } }
+```
+
+### Check Matching Filter
+
+`checkMatchingFilter(a: FilterOperator, b: FilterOperator) => boolean`
+
+The `checkMatchingFilter` function will compare two `FilterOperators` and return is they match in all properties. This ensures they have the same filter operation (`op` value), same `fieldName` and matching `value`. Note that for array values, the match is performed independent of order and after removing duplicates - it is a match on the logical content not on the exact array.
+
+```ts
+import { checkMatchingFilter } from '@overture-stack/sqon-builder`;
+const filterA = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Bob', 'May'] } };
+const filterB = {	op: FilterKeys.In, content: { fieldName: 'name', value: ['May', 'Jim', 'Bob'] } };
+
+const matchResult = checkMatchingFilter(filterA, filterB); // true
 ```
