@@ -33,6 +33,7 @@ const reduceSQON = (sqon: SQON): SQON => {
 		const output: CombinationOperator = {
 			op: sqon.op,
 			content: [],
+			pivot: sqon.pivot,
 		};
 		for (const innerSqon of sqon.content) {
 			// Filters are added to output content
@@ -101,7 +102,7 @@ const reduceSQON = (sqon: SQON): SQON => {
 					output.content.push(innerSqon);
 					continue;
 				}
-				if (innerSqon.op === output.op) {
+				if (innerSqon.op === output.op && innerSqon.pivot === output.pivot) {
 					// 4. inner sqon op matches outter sqon, remove inner combination and use the content
 					output.content.push(...innerSqon.content);
 					continue;

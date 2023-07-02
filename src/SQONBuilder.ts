@@ -261,7 +261,7 @@ const createBuilder = (sqon: SQON): SQONBuilder => {
 	};
 };
 
-const combine = (op: CombinationKey, sqon: SQON, content: SQON | SQON[]): CombinationOperator => {
+const combine = (op: CombinationKey, sqon: SQON, content: SQON | SQON[], pivot?: string): CombinationOperator => {
 	if (sqon.op === op) {
 		return {
 			op,
@@ -291,20 +291,20 @@ const _from = (input: unknown): SQONBuilder => {
 };
 const _and =
 	(original: SQON) =>
-	(content: SQON | SQON[]): SQONBuilder =>
-		createBuilder(combine(CombinationKeys.And, original, content));
+	(content: SQON | SQON[], pivot?: string): SQONBuilder =>
+		createBuilder(combine(CombinationKeys.And, original, content, pivot));
 const _or =
 	(original: SQON) =>
-	(content: SQON | SQON[]): SQONBuilder =>
-		createBuilder(combine(CombinationKeys.Or, original, content));
+	(content: SQON | SQON[], pivot?: string): SQONBuilder =>
+		createBuilder(combine(CombinationKeys.Or, original, content, pivot));
 const _not =
 	(original: SQON) =>
-	(content: SQON | SQON[]): SQONBuilder => {
+	(content: SQON | SQON[], pivot?: string): SQONBuilder => {
 		const notOp: CombinationOperator = {
 			op: CombinationKeys.Not,
 			content: asArray(content),
 		};
-		return createBuilder(combine(CombinationKeys.And, original, notOp));
+		return createBuilder(combine(CombinationKeys.And, original, notOp, pivot));
 	};
 const _in =
 	(original: SQON) =>

@@ -112,10 +112,12 @@ export const FilterOperator = zod.discriminatedUnion('op', [InFilter, GreaterTha
 export type CombinationOperator = {
 	op: CombinationKey;
 	content: (CombinationOperator | FilterOperator)[];
+	pivot?: string;
 };
 export const CombinationOperator: zod.ZodType<CombinationOperator> = zod.object({
 	op: zod.union([zod.literal(CombinationKeys.And), zod.literal(CombinationKeys.Not), zod.literal(CombinationKeys.Or)]),
 	content: zod.array(zod.union([FilterOperator, zod.lazy(() => CombinationOperator)])),
+	pivot: zod.string().optional(),
 });
 
 export const Operator = zod.union([CombinationOperator, FilterOperator]);
