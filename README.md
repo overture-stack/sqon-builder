@@ -21,13 +21,13 @@ Arranger 3 clarified the SQON property naming, changing `field` to be `fieldName
 	- [API](#api)
 		- [Root](#root)
 		- [Filters](#filters-1)
-			- [SQON.in(fieldName, values)](#sqoninfieldname-values)
-			- [SQON.gt(fieldName, value)](#sqongtfieldname-value)
-			- [SQON.lt(fieldName, value)](#sqonltfieldname-value)
+			- [SQONBuilder.in(fieldName, values)](#sqonbuilderinfieldname-values)
+			- [SQONBuilder.gt(fieldName, value)](#sqonbuildergtfieldname-value)
+			- [SQONBuilder.lt(fieldName, value)](#sqonbuilderltfieldname-value)
 		- [Combinations](#combinations)
-			- [SQON.and(sqon)](#sqonandsqon)
-			- [SQON.or(sqon)](#sqonorsqon)
-			- [SQON.not(sqon)](#sqonnotsqon)
+			- [SQONBuilder.and(sqon)](#sqonbuilderandsqon)
+			- [SQONBuilder.or(sqon)](#sqonbuilderorsqon)
+			- [SQONBuilder.not(sqon)](#sqonbuildernotsqon)
 		- [From](#from)
 	- [Types and SQON Validation](#types-and-sqon-validation)
 		- [SQON Type Composition](#sqon-type-composition)
@@ -211,23 +211,23 @@ This will throw an error if the provided value is not a valid SQON or JSON strin
 
 ### Filters
 
-#### SQON.in(fieldName, values)
+#### SQONBuilder.in(fieldName, values)
 
 Creates a filter requiring the given field to have one of the given values. The value can be a single string or number value, or an array of strings or numbers.
 
-Example: `SQON.in('name',['Jim','Bob'])`
+Example: `SQONBuilder.in('name',['Jim','Bob'])`
 
-#### SQON.gt(fieldName, value)
+#### SQONBuilder.gt(fieldName, value)
 
 Greater Than operator. Create a filter requiring the given field to be greater than the given value
 
-Example: `SQON.gt('age',21)`
+Example: `SQONBuilder.gt('age',21)`
 
-#### SQON.lt(fieldName, value)
+#### SQONBuilder.lt(fieldName, value)
 
 Lesser Than operator. Create a filter requiring the given field to be lesser than the given value
 
-Example: `SQON.lt('count', 100)`
+Example: `SQONBuilder.lt('count', 100)`
 
 ### Combinations
 
@@ -237,23 +237,23 @@ If this is called from an instance, the method will accept one SQON or an array,
 
 If this is called from the class, an array of SQONs is required to be passed.
 
-#### SQON.and(sqon)
+#### SQONBuilder.and(sqon)
 
 All filters in the resulting SQON must be true.
 
-Example: `SQON.and( [someSqon, anotherSqon] )`
+Example: `SQONBuilder.and( [someSqon, anotherSqon] )`
 
-#### SQON.or(sqon)
+#### SQONBuilder.or(sqon)
 
 At least one filter in the resulting SQON must be true.
 
-Example: `SQON.or( [someSqon, anotherSqon] )`
+Example: `SQONBuilder.or( [someSqon, anotherSqon] )`
 
-#### SQON.not(sqon)
+#### SQONBuilder.not(sqon)
 
 None of the filters in the resulting SQON can be true.
 
-Example: `SQON.not( [someSqon] )`
+Example: `SQONBuilder.not( [someSqon] )`
 
 ### From
 
@@ -262,7 +262,7 @@ Build a new SQON from a string or from a JSON object.
 Example with string:
 
 ```ts
-SQON.from(
+SQONBuilder.from(
   '{"op":"and","content":[{"op":"in","content":{"fieldName":"name","value":"Tim"}},{"op":"gt","content":{"fieldName":"age","value":"19"}}]}',
 );
 ```
@@ -341,6 +341,9 @@ To help identify which type of `Operator` the top level of a given `SQON` is, th
 1. `isCombination()` will identify if the input is a `CombinationOperator`
 2. `isFilter()` will identify if the input is a `FilterOperator`
 3. `isArrayFilter()` will further narrow a filter down to see if it can accept an Array of values, or only a single number.
+4. `isScalarFilter()` will further narrow a filter down to see if requires a number as a value.
+5. `isArrayFilterKey()` will identify if the given input is one of the ArrayFilterKeys.
+6. `isScalarFilter()` will identify if the given input is one of the ScalarFilterKeys.
 
 Example:
 
