@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import cloneDeepPojo from '../../src/utils/cloneDeepPojo';
+import cloneDeepValues from '../../src/utils/cloneDeepValues';
 
 describe('utils/cloneDeepPojo', () => {
 	it('clones nested objects', () => {
@@ -10,7 +10,7 @@ describe('utils/cloneDeepPojo', () => {
 			object: { a: 'asdf', b: ['arrayInObject', 2345] },
 			nested1: { nested2: { nested3: {} } },
 		};
-		const clone = cloneDeepPojo(object);
+		const clone = cloneDeepValues(object);
 		expect(clone).not.equal(object);
 		expect(clone).deep.equal(object);
 		expect(clone).deep.contain(object);
@@ -28,7 +28,7 @@ describe('utils/cloneDeepPojo', () => {
 		};
 		const expected = { a: 'string' };
 
-		const clone = cloneDeepPojo(object);
+		const clone = cloneDeepValues(object);
 		expect(clone).deep.equal(expected);
 		expect(clone).not.haveOwnProperty('function');
 	});

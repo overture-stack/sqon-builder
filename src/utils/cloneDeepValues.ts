@@ -11,9 +11,9 @@ type StripFunctions<T extends { [key: string]: any }> = T extends infer U
  * @param source
  * @returns
  */
-const cloneDeepPojo = <T extends { [key: string]: any }>(source: T): StripFunctions<T> => {
+const cloneDeepValues = <T extends { [key: string]: any }>(source: T): StripFunctions<T> => {
 	return Array.isArray(source)
-		? source.map((item) => cloneDeepPojo(item))
+		? source.map((item) => cloneDeepValues(item))
 		: source && typeof source === 'object'
 		? Object.getOwnPropertyNames(source).reduce((o, prop) => {
 				if (typeof source[prop] === 'function') {
@@ -21,10 +21,10 @@ const cloneDeepPojo = <T extends { [key: string]: any }>(source: T): StripFuncti
 					return o;
 				}
 				Object.defineProperty(o, prop, Object.getOwnPropertyDescriptor(source, prop)!);
-				o[prop] = cloneDeepPojo(source[prop]);
+				o[prop] = cloneDeepValues(source[prop]);
 				return o;
 		  }, Object.create(Object.getPrototypeOf(source)))
 		: source;
 };
 
-export default cloneDeepPojo;
+export default cloneDeepValues;
