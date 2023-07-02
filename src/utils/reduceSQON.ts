@@ -9,13 +9,12 @@ import {
 	isFilter,
 } from '../types/sqon';
 import asArray from './asArray';
+import { createFilter } from './createFilter';
 import filterDuplicates from './filterDuplicates';
 const deduplicateValues = (filter: FilterOperator): FilterOperator => {
 	if (isArrayFilter(filter)) {
-		return {
-			op: filter.op,
-			content: { fieldName: filter.content.fieldName, value: asArray(filter.content.value).filter(filterDuplicates) },
-		};
+		const value = asArray(filter.content.value).filter(filterDuplicates);
+		return createFilter(filter.content.fieldName, filter.op, value);
 	}
 	return filter;
 };
