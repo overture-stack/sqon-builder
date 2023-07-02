@@ -41,6 +41,12 @@ type SQONBuilder = {
 	 *
 	 * Note: This only looks for filters at the root of the sqon or in the content of the top level combination operator.
 	 * This will not search recursively through the SQON.
+	 * @example
+	 * ```
+	 * const initial = SQONBuilder.in('name', 'Jim').gt('score', 50);
+initial.removeFilter({op: FilterKeys.In, content: {fieldName: 'name', value: ['Jim']}});
+// {op: 'gt', content: {fieldName: 'score', value: 50}}
+	 * ```
 	 * @param filter
 	 * @returns
 	 */
@@ -61,6 +67,23 @@ type SQONBuilder = {
 	 *
 	 * Note: This only looks for filters at the root of the sqon or in the content of the top level combination operator.
 	 * This will not search recursively through the SQON.
+	 *
+	 * @example
+	 * ```
+	 * const builder = SQONBuilder.in('name', ['Jim', 'Bob']).gt('age', 20).lt('age', 50);
+	 *
+	 * // Remove all filters on 'age'
+	 * builder.removeFilter('age');
+	 * // {"op":"in","content":{"fieldName":"name","value":["Jim","Bob"]}}
+	 * ```
+	 * @example
+	 * ```
+	 * const builder = SQONBuilder.in('name', ['Jim', 'Bob', 'May']);
+	 *
+	 * // Remove values in filter
+	 * builder.removeFilter('name', FilterKeys.In, ['Jim', 'Bob', 'Sue']);
+	 * // {"op":"in","content":{"fieldName":"name","value":["May"]}}
+	 * ```
 	 * @param fieldName
 	 * @param op
 	 * @param value
@@ -71,6 +94,14 @@ type SQONBuilder = {
 	/**
 	 * Add a specific filter to the content of the top level operator, or replace a matching filter (same `op` and `fieldName`) with the new value specified.
 	 * If the current SQON is just a filter, then the existing filter and this new filter will be combined with an `and` operator.
+	 *
+	 * @example
+	 * ```
+	 * const builder = SQONBuilder.gt('age', 50).in('name', ['Jim', 'Bob']);
+	 * builder.setFilter('name', FilterKeys.In, ['Jim', 'Sue']);
+	 * // {"op":"and","content":[{"op":"gt","content":{"fieldName":"age","value":50}},{"op":"in","content":{"fieldName":"name","value":["Jim","Sue"]}}]}
+	 * ```
+	 *
 	 * @param fieldName
 	 * @param operator Filter key string
 	 * @param value Filter value of a type that corresponds to the provided operator

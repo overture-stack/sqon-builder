@@ -19,23 +19,27 @@ Arranger 3 clarified the SQON property naming, changing `field` to be `fieldName
 		- [Combining Multiple Filters](#combining-multiple-filters)
 		- [SQON Output to String or Object](#sqon-output-to-string-or-object)
 	- [API](#api)
-		- [`SQONBuilder(sqon: SQONBuilder | SQON | string)`](#sqonbuildersqon-sqonbuilder--sqon--string)
-			- [In Filter: `SQONBuilder.in(fieldName: string, value: ArrayFilterValue)`](#in-filter-sqonbuilderinfieldname-string-value-arrayfiltervalue)
-			- [GreaterThan filter: `SQONBuilder.gt(fieldName, value)`](#greaterthan-filter-sqonbuildergtfieldname-value)
-			- [LesserThan Filter: `SQONBuilder.lt(fieldName, value)`](#lesserthan-filter-sqonbuilderltfieldname-value)
-			- [And Combination: `SQONBuilder.and(sqon)`](#and-combination-sqonbuilderandsqon)
-			- [Or Combination: `SQONBuilder.or(sqon)`](#or-combination-sqonbuilderorsqon)
-			- [Not Combination: `SQONBuilder.not(sqon)`](#not-combination-sqonbuildernotsqon)
-		- [From: `SQONBuilder.from(input: unknown)`](#from-sqonbuilderfrominput-unknown)
-		- [Filter Modifiers](#filter-modifiers)
-			- [`removeExactFilter(filter: FilterOperator)`](#removeexactfilterfilter-filteroperator)
+		- [SQONBuilder default export](#sqonbuilder-default-export)
+			- [Filter: In](#filter-in)
+			- [Filter: Greater Than](#filter-greater-than)
+			- [Filter: Lesser Than](#filter-lesser-than)
+			- [Combine: And](#combine-and)
+			- [Combine: Or](#combine-or)
+			- [Combine: Not](#combine-not)
+			- [From](#from)
+		- [SQONBuilder Object](#sqonbuilder-object)
+			- [ToString](#tostring)
+			- [ToValue](#tovalue)
+			- [Remove Exact Filter](#remove-exact-filter)
+			- [Remove Filter](#remove-filter)
+			- [Set Filter](#set-filter)
+		- [Reduce SQON](#reduce-sqon)
+		- [Check Matching Filter](#check-matching-filter)
 	- [Types and SQON Validation](#types-and-sqon-validation)
 		- [SQON Type Composition](#sqon-type-composition)
 			- [FilterOperators](#filteroperators)
 			- [CombinationOperators](#combinationoperators)
 			- [Convenient Type Guards](#convenient-type-guards)
-		- [SQON Reduction](#sqon-reduction)
-		- [Check Matching Filter](#check-matching-filter)
 
 
 ## How to Use
@@ -197,7 +201,9 @@ builder.toValue();
 
 ## API
 
-### `SQONBuilder(sqon: SQONBuilder | SQON | string)`
+### SQONBuilder default export
+`SQONBuilder(sqon: SQONBuilder | SQON | string)`
+
 The package default export is the `SQONBuilder`. This is a function that will generate a `SQONBuilder` object from another `SQONBuilder`, a `SQON` object, or JSON `string`.
 
 > Note: This will attempt to parse the provided string as JSON and will then validate that the contents are a valid SQON. If the provided string cannot be parsed from JSON a `SyntaxError` will be thrown. If the parsed string is not a valid SQON, a [`ZodError`](https://zod.dev/ERROR_HANDLING) will be thrown.
@@ -213,43 +219,50 @@ The `SQONBuilder` object that is returned stores the value of the generated SQON
 Example: `builder.lt('age','30').gt('score',95);`
 
 
-#### In Filter: `SQONBuilder.in(fieldName: string, value: ArrayFilterValue)`
+#### Filter: In
+`SQONBuilder.in(fieldName: string, value: ArrayFilterValue) => SQONBuilder`
 
 Creates a filter requiring the given field to have one of the given values. The value matches the `ArrayFilterValue` type which representes a string, a number, or an array of strings and numbers.
 
 Example: `SQONBuilder.in('name',['Jim','Bob'])`
 
-#### GreaterThan filter: `SQONBuilder.gt(fieldName, value)`
+#### Filter: Greater Than
+`SQONBuilder.gt(fieldName: string, value: number) => SQONBuilder`
 
-Greater Than operator. Create a filter requiring the given field to be greater than the given value
+Greater Than operator. Create a filter requiring the given field to be greater than the given value.
 
 Example: `SQONBuilder.gt('age',21)`
 
-#### LesserThan Filter: `SQONBuilder.lt(fieldName, value)`
+#### Filter: Lesser Than
+`SQONBuilder.lt(fieldName: string, value: number) => SQONBuilder`
 
-Lesser Than operator. Create a filter requiring the given field to be lesser than the given value
+Lesser Than operator. Create a filter requiring the given field to be lesser than the given value.
 
 Example: `SQONBuilder.lt('count', 100)`
 
-#### And Combination: `SQONBuilder.and(sqon)`
+#### Combine: And
+`SQONBuilder.and(sqon: SQON | SQON[]) => SQONBuilder`
 
 All filters in the resulting SQON must be true.
 
 Example: `SQONBuilder.and( [someSqon, anotherSqon] )`
 
-#### Or Combination: `SQONBuilder.or(sqon)`
+#### Combine: Or
+`SQONBuilder.or(sqon: SQON | SQON[]) => SQONBuilder`
 
 At least one filter in the resulting SQON must be true.
 
 Example: `SQONBuilder.or( [someSqon, anotherSqon] )`
 
-#### Not Combination: `SQONBuilder.not(sqon)`
+#### Combine: Not
+`SQONBuilder.not(sqon: SQON | SQON[]) => SQONBuilder`
 
 None of the filters in the resulting SQON can be true.
 
 Example: `SQONBuilder.not( [someSqon] )`
 
-### From: `SQONBuilder.from(input: unknown)`
+#### From
+`SQONBuilder.from(input: unknown) => SQONBuilder`
 
 Build a new SQON from a string or from a JSON object.
 
@@ -267,14 +280,53 @@ If the provided string cannot be parsed from JSON a `SyntaxError` will be thrown
 
 If the provided object or parsed string is not a valid SQON, a [`ZodError`](https://zod.dev/ERROR_HANDLING) will be thrown.
 
-### Filter Modifiers
+### SQONBuilder Object
 
-#### `removeExactFilter(filter: FilterOperator)`
+The `SQONBuilder` type is an object that stores a `SQON` object and exposes functions to modify that `SQON`, returning a new `SQONBuilder` object. This allows a user to chain function calls together to create complex filters one step at a time.
+
+All filter and combination methods listed above can be called from the returned `SQONBuilder` object:
+* In: `.in(fieldName: string, value: ArrayFilterValue) => SQONBuilder`
+* GreaterThan: `.gt(fieldName: string, value: number) => SQONBuilder`
+* LesserThan: `.lt(fieldName: string, value: number) => SQONBuilder`
+* And: `.and(sqon: SQONBuilder | SQON) => SQONBuilder`
+* Or: `.in(sqon: SQONBuilder | SQON) => SQONBuilder`
+* Not: `.in(sqon: SQONBuilder | SQON) => SQONBuilder`
+
+Example: `const mySqon: SQON = SQONBuilder.in('name', ['Jim']).or(SQONBuilder.gt('age', 25).lt('score', 50)).toValue();`
+
+All builder methods are side-effect free: modifications made with to a `SQONBuilder` are additive on top of a cloned SQON from the previous builder, so that the original builder is not modified. This can let you, for example, create a builder as a base SQON to make variations on in your application:
+
+```ts
+const base = SQONBuilder.in('name', ['Jim']);
+const ageRestricted = base.gt('age', 25);
+// {"op":"and","content":[{"op":"in","content":{"fieldName":"name","value":["Jim"]}},{"op":"gt","content":{"fieldName":"age","value":25}}]}
+
+const scoreRestricted = base.lt('score', 50);
+// {"op":"and","content":[{"op":"in","content":{"fieldName":"name","value":["Jim"]}},{"op":"lt","content":{"fieldName":"score","value":50}}]}
+```
+
+As filters and combinations are added to a `SQONBuilder`, the `SQON` maintained will be [reduced](#reduce-sqon), if possible. This will result in matching filters and combinations to be combined, and empty combinations to be removed.
+
+In addition to the filter and combination functions, there are some additional methods that can modify the filters stored in the existing SQON, and then two methods for outputing the stored `SQON` as either a string with [`.toString()`](#tostring) or a value with [`.toValue()`](#tovalue)
+
+#### ToString
+`builder.toString() => string`
+
+Return stored `SQON` value as string.
+
+#### ToValue
+`builder.toValue() => SQON`
+
+Return stored `SQON` value as an object.
+
+#### Remove Exact Filter
+`.removeExactFilter(filter: FilterOperator) => SQONBuilder`
+
 Find exact matching filter and remove it from the SQON.
 
 For filters with an array of values, the order of the array will be ignored during matching.
 
-Note: This only looks for filters at the root of the sqon or in the content of the top level combination operator.
+> Note: This only looks for filters at the root of the sqon or in the content of the top level combination operator.
 This will not search recursively through the SQON.
 
 ```ts
@@ -282,6 +334,87 @@ const initial = SQONBuilder.in('name', 'Jim').gt('score', 50);
 initial.removeFilter({op: FilterKeys.In, content: {fieldName: 'name', value: ['Jim']}});
 // {op: 'gt', content: {fieldName: 'score', value: 50}}
 ```
+
+#### Remove Filter
+`.(fieldName: string, op?: FilterKey, value?: FilterValue) => SQONBuilder`
+
+Find partial matching filters based on optional arguments and remove them from the SQON.
+
+If only the fieldName is provided, all filters on that field will be removed.
+
+If the fieldName and operator are provided, then a filter matching that fieldName and op will be removed
+(shouldn't ever be more than one in an operator due to the SQON reducer).
+
+If values are provided, then a filter exactly matching all the arguments will be removed.
+
+If a filter is found that matches the fieldName and op, then all matching values form the provided array will
+be removed from the filter. This lets you remove select values from an array filter without removing the entire
+filter.
+
+> Note: This only looks for filters at the root of the sqon or in the content of the top level combination operator.
+This will not search recursively through the SQON.
+
+_Example removing all filters for a property:_
+```ts
+const builder = SQONBuilder.in('name', ['Jim', 'Bob']).gt('age', 20).lt('age', 50);
+// {"op":"and","content":[{"op":"in","content":{"fieldName":"name","value":["Jim","Bob"]}},{"op":"gt","content":{"fieldName":"age","value":20}},{"op":"lt","content":{"fieldName":"age","value":50}}]}
+
+// Remove all filters on 'age'
+builder.removeFilter('age');
+// {"op":"in","content":{"fieldName":"name","value":["Jim","Bob"]}}
+```
+
+_Example removing some values from an array filter:_
+```ts
+const builder = SQONBuilder.in('name', ['Jim', 'Bob', 'May']);
+builder.removeFilter('name', FilterKeys.In, ['Jim', 'Bob', 'Sue']);
+// {"op":"in","content":{"fieldName":"name","value":["May"]}}
+```
+
+#### Set Filter
+`.setFilter(fieldName: string, op: FilterKey, value: FilterValueMap[FilterKey]) => SQONBuilder`
+
+Add a specific filter to the content of the top level operator, or replace a matching filter (same `op` and `fieldName`) with the new value specified.
+
+If the current SQON is just a filter, then the existing filter and this new filter will be combined with an `and` operator.
+
+Example:
+```ts
+const builder = SQONBuilder.gt('age', 50).in('name', ['Jim', 'Bob']);
+builder.setFilter('name', FilterKeys.In, ['Jim', 'Sue']);
+// {"op":"and","content":[{"op":"gt","content":{"fieldName":"age","value":50}},{"op":"in","content":{"fieldName":"name","value":["Jim","Sue"]}}]}
+```
+
+### Reduce SQON
+`reduceSQON(sqon: SQON) => SQON`
+
+The `reduceSQON` function is used internally by the SQON builder to reduce the complexity of a SQON by removing redundant operators and collecting similar filters. For example, if there is an `and` combination wrapping a single filter, the `and` operator can be removed and replaced by the single filter.
+
+The reducer function is exported so you are able to run the reduction algorithm on SQONs independent of the SQONBuilder.
+
+```ts
+import { reduceSQON } from '@overture-stack/sqon-builder`;
+
+const sqon: SQON = { op: 'and', 'content': [ { op: 'lt', content: { fieldName: 'age', value: 100 } } ] };
+
+const reduced = reduceSQON(sqon);
+// { op: 'lt', content: { fieldName: 'age', value: 100 } }
+```
+
+### Check Matching Filter
+
+`checkMatchingFilter(a: FilterOperator, b: FilterOperator) => boolean`
+
+The `checkMatchingFilter` function will compare two `FilterOperators` and return is they match in all properties. This ensures they have the same filter operation (`op` value), same `fieldName` and matching `value`. Note that for array values, the match is performed independent of order and after removing duplicates - it is a match on the logical content not on the exact array.
+
+```ts
+import { checkMatchingFilter } from '@overture-stack/sqon-builder`;
+const filterA = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Bob', 'May'] } };
+const filterB = {	op: FilterKeys.In, content: { fieldName: 'name', value: ['May', 'Jim', 'Bob'] } };
+
+const matchResult = checkMatchingFilter(filterA, filterB); // true
+```
+
 
 ## Types and SQON Validation
 
@@ -378,35 +511,4 @@ if(isCombination(sqon)) {
 		// sqon.content.value is a single number
 	}
 }
-```
-
-### SQON Reduction
-
-`reduceSQON(sqon: SQON) => SQON`
-
-The `reduceSQON` function is used internally by the SQON builder to reduce the complexity of a SQON by removing redundant operators and collecting similar filters. For example, if there is an `and` combination wrapping a single filter, the `and` operator can be removed and replaced by the single filter.
-
-The reducer function is exported so you are able to run the reduction algorithm on SQONs independent of the SQONBuilder.
-
-```ts
-import { reduceSQON } from '@overture-stack/sqon-builder`;
-
-const sqon: SQON = { op: 'and', 'content': [ { op: 'lt', content: { fieldName: 'age', value: 100 } } ] };
-
-const reduced = reduceSQON(sqon);
-// { op: 'lt', content: { fieldName: 'age', value: 100 } }
-```
-
-### Check Matching Filter
-
-`checkMatchingFilter(a: FilterOperator, b: FilterOperator) => boolean`
-
-The `checkMatchingFilter` function will compare two `FilterOperators` and return is they match in all properties. This ensures they have the same filter operation (`op` value), same `fieldName` and matching `value`. Note that for array values, the match is performed independent of order and after removing duplicates - it is a match on the logical content not on the exact array.
-
-```ts
-import { checkMatchingFilter } from '@overture-stack/sqon-builder`;
-const filterA = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Bob', 'May'] } };
-const filterB = {	op: FilterKeys.In, content: { fieldName: 'name', value: ['May', 'Jim', 'Bob'] } };
-
-const matchResult = checkMatchingFilter(filterA, filterB); // true
 ```
