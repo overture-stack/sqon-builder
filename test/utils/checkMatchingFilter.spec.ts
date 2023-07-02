@@ -1,8 +1,41 @@
 import { expect } from 'chai';
 import { ArrayFilter, FilterKeys, FilterOperator, ScalarFilter } from '../../src';
-import checkMatchingFilter from '../../src/utils/checkMatchingFilter';
+import checkMatchingFilter, { checkMatchingArrays } from '../../src/utils/checkMatchingFilter';
 
 describe('utils/checkMatchingFilter', () => {
+	describe('checkMatchingArrays', () => {
+		it('true when identical arrays', () => {
+			const a = [1, 2, 3, 4];
+			const b = [1, 2, 3, 4];
+			expect(checkMatchingArrays(a, b)).true;
+		});
+		it('true when empty arrays', () => {
+			const a: never[] = [];
+			const b: never[] = [];
+			expect(checkMatchingArrays(a, b)).true;
+		});
+		it('true when arrays with different orders', () => {
+			const a = [1, 2, 3, 4];
+			const b = [3, 2, 1, 4];
+			expect(checkMatchingArrays(a, b)).true;
+		});
+		it('true when when one array has duplicates', () => {
+			const a = [1, 2, 3, 4];
+			const b = [3, 2, 1, 4, 2, 3];
+			expect(checkMatchingArrays(a, b)).true;
+		});
+		it('false when arrays are different', () => {
+			const a = [1, 2];
+			const b = [3, 4];
+			expect(checkMatchingArrays(a, b)).false;
+		});
+		it('false when one array has more elements', () => {
+			const a = [1, 2, 3, 4];
+			const b = [1, 2, 3, 4, 5];
+			expect(checkMatchingArrays(a, b)).false;
+			expect(checkMatchingArrays(b, a)).false;
+		});
+	});
 	it('matches scalar filters', () => {
 		const a: ScalarFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'score', value: 90 } };
 		const match: ScalarFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'score', value: 90 } };
