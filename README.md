@@ -31,6 +31,8 @@ Arranger 3 clarified the SQON property naming, changing `field` to be `fieldName
 		- [From](#from)
 	- [Types and SQON Validation](#types-and-sqon-validation)
 		- [SQON Type Composition](#sqon-type-composition)
+			- [FilterOperators](#filteroperators)
+			- [CombinationOperators](#combinationoperators)
 			- [Convenient Type Guards](#convenient-type-guards)
 	- [SQON Reduction](#sqon-reduction)
 
@@ -51,11 +53,11 @@ Produces a SQON with the following content:
 
 ```json
 {
-	"op": "in",
-	"content": {
-		"fieldName": "name",
-		"value": ["Jim", "Bob"]
-	}
+  "op": "in",
+  "content": {
+    "fieldName": "name",
+    "value": ["Jim", "Bob"]
+  }
 }
 ```
 
@@ -79,27 +81,9 @@ Creates the SQON:
 {
   "op": "and",
   "content": [
-    {
-      "op": "in",
-      "content": {
-        "fieldName": "name",
-        "value": ["Jim", "Bob"]
-      }
-    },
-    {
-      "op": "gt",
-      "content": {
-        "fieldName": "score",
-        "value": 9000
-      }
-    },
-    {
-      "op": "lt",
-      "content": {
-        "fieldName": "age",
-        "value": 100
-      }
-    }
+    { "op": "in", "content": { "fieldName": "name", "value": ["Jim", "Bob"] } },
+    { "op": "gt", "content": { "fieldName": "score", "value": 9000 } },
+    { "op": "lt", "content": { "fieldName": "age", "value": 100 } }
   ]
 }
 ```
@@ -112,7 +96,7 @@ Every SQON can be combined with other SQONs through the boolean combinations `an
 const nameFilter = SQONBuilder.in('name', ['Jim', 'Bob']);
 const scoreFilter = SQONBuilder.gt('score', 9000);
 
-SQONBuilder.or(nameFilter, scoreFilter);
+SQONBuilder.or([nameFilter, scoreFilter]);
 ```
 Result:
 
@@ -120,30 +104,8 @@ Result:
 {
   "op": "or",
   "content": [
-    {
-      "op": "and",
-      "content": [
-        {
-          "op": "in",
-          "content": {
-            "fieldName": "name",
-            "value": ["Jim", "Bob"]
-          }
-        }
-      ]
-    },
-    {
-      "op": "and",
-      "content": [
-        {
-          "op": "gt",
-          "content": {
-            "fieldName": "score",
-            "value": 9000
-          }
-        }
-      ]
-    }
+    { "op": "in", "content": { "fieldName": "name", "value": ["Jim", "Bob"] } },
+    { "op": "gt", "content": { "fieldName": "score", "value": 9000 } }
   ]
 }
 ```
@@ -181,41 +143,14 @@ Result:
     {
       "op": "or",
       "content": [
-        {
-          "op": "and",
-          "content": [
-            {
-              "op": "gt",
-              "content": {
-                "fieldName": "score",
-                "value": 9000
-              }
-            }
-          ]
-        },
-        {
-          "op": "and",
-          "content": [
-            {
-              "op": "lt",
-              "content": {
-                "fieldName": "age",
-                "value": 100
-              }
-            }
-          ]
-        }
+        { "op": "gt", "content": { "fieldName": "score", "value": 9000 } },
+        { "op": "lt", "content": { "fieldName": "age", "value": 100 } }
       ]
     },
-    {
-      "op": "in",
-      "content": {
-        "fieldName": "name",
-        "value": ["Jim", "Bob"]
-      }
-    }
+    { "op": "in", "content": { "fieldName": "name", "value": ["Jim", "Bob"] } }
   ]
 }
+
 ```
 
 The `.not()` combination will wrap the existing content in an `and` operation, and then insert a `not` operator surrounding the argument:
@@ -242,7 +177,6 @@ Results in:
     }
   ]
 }
-
 ```
 
 ### SQON Output to String or Object
@@ -250,7 +184,7 @@ Results in:
 The SQONBuilder object can be passed directly to most network request libraries since it contains the properties of the SQON. In cases where a string is required or the object with builder functions cannot be used, the builder can be output as a string with `.toString()` or as a plain object as `.toValue()`. 
 
 ```ts
-const builtder = SQONBuilder.in('name', ['Jim', 'Bob']);
+const builder = SQONBuilder.in('name', ['Jim', 'Bob']);
 
 builder.toString();
 // '{"op":"in","content":{"fieldName":"name","value":["Jim","Bob"]}}'
@@ -361,10 +295,41 @@ if(validationResult.success) {
 
 ### SQON Type Composition
 
-There are two types of operators that compose a SQON. Each of these has a TS type alias provided by this package.
+A SQON is composed from a series of nested `Operators` that take the general structure:
 
-1. `FilterOperator` represents a filter restricting matching values of a specific field. The content requires a `fieldName` and value that it will match. There are two categories of filter:  `ArrayFilter` that can accept an array of values, and `ScalarFilter` that only accept a single `number` as a value.
-2. `CombinationOperator` represents boolean logic applied to a group of other operators. The `content` of a CombinationOperator  accepts a single `Operator` or array of `Operator`s, either Filter or Combination.
+```json
+{
+	"op": "<operation code>",
+	"content": <Value or array of values>
+}
+```
+
+There are two types of Operators:
+1. `FilterOperators` - Define a rule used to filter data based on matches to a specific field., for example the `in` filter will find all data that has a field value matching one of the included values in the filter.
+2. `CombinationOperators` - Combine multiple operators with boolean logic. 
+
+#### FilterOperators
+
+The `content` property of a `FilterOperator` is a single object of the form:
+
+```json
+{
+	"fieldName": "<Field name to filter on>",
+	"value": <Value or array of values>,
+}
+```
+
+Some filters accept an array of values, number or string, and some only accept a single number. These are differentiated in this library by the types `ArrayFilterOperator` and `ScalarFilterOperator`. You also have access to all the corresponding operation keys in the `FilterKeys`, `ArrayFilterKeys`, and `ScalarFilterKeys` records.
+
+#### CombinationOperators
+
+The `content` property of a `CombinationOperator` is an array of other operators - these can be `FilterOperators` or additional nested `CombinationOperators`
+
+There are three supported combinations representing the common boolean operations `and` and `or`, plus `not`. `not` indicates that all contained operations must be false, so is equivalent to a list of negated filters combined with an `and`.
+
+All keys used in combinations are available in the `CombinationKeys` object.
+
+> Note: The SQONBuilder will not create a cyclical combination loop. All SQONs passed into the SQON builder are cloned to get their immediate value and are stored by reference.
 
 The `Operator` type is a union of the `FilterOperator | CombinationOperator`. This is equivalent to a `SQON` type - SQON is just an alias for this type.
 
