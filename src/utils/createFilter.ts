@@ -1,9 +1,7 @@
 import {
-	ArrayFilterValue,
 	FilterKey,
 	FilterOperator,
-	FilterValueMap,
-	ScalarFilterValue,
+	FilterTypeMap,
 	isArrayFilterKey,
 	isArrayFilterValue,
 	isScalarFilterKey,
@@ -14,9 +12,12 @@ import asArray from './asArray';
 export const createFilter = <Key extends FilterKey>(
 	fieldName: string,
 	op: Key,
-	value: FilterValueMap[Key],
+	value: FilterTypeMap[Key]['content']['value'],
 ): FilterOperator => {
-	if (isArrayFilterKey(op) && isArrayFilterValue(value)) {
+	if (op === 'gt') {
+		const x = value;
+	}
+	if (isArrayFilterKey(op)) {
 		return { op, content: { fieldName, value: asArray(value) } };
 	} else if (isScalarFilterKey(op) && isScalarFilterValue(value)) {
 		return { op, content: { fieldName, value } };
@@ -26,3 +27,5 @@ export const createFilter = <Key extends FilterKey>(
 		throw new TypeError(`Cannot assign the value "${value}" to a filter of type "${op}".`);
 	}
 };
+
+createFilter('a', 'in', ['1']);

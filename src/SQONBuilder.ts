@@ -8,7 +8,7 @@ import {
 	FilterKeys,
 	FilterOperator,
 	FilterValue,
-	FilterValueMap,
+	FilterTypeMap,
 	GreaterThanFilter,
 	InFilter,
 	LesserThanFilter,
@@ -107,7 +107,11 @@ initial.removeFilter({op: FilterKeys.In, content: {fieldName: 'name', value: ['J
 	 * @param value Filter value of a type that corresponds to the provided operator
 	 * @returns
 	 */
-	setFilter: <Key extends FilterKey>(fieldName: string, op: Key, value: FilterValueMap[Key]) => SQONBuilder;
+	setFilter: <Key extends FilterKey>(
+		fieldName: string,
+		op: Key,
+		value: FilterTypeMap[Key]['content']['value'],
+	) => SQONBuilder;
 
 	/**
 	 * Return a string with the JSON stringified representation of the current SQON
@@ -210,7 +214,11 @@ const createBuilder = (sqon: SQON): SQONBuilder => {
 		}
 	};
 
-	const setFilter = <Key extends FilterKey>(fieldName: string, op: Key, value: FilterValueMap[Key]): SQONBuilder => {
+	const setFilter = <Key extends FilterKey>(
+		fieldName: string,
+		op: Key,
+		value: FilterTypeMap[Key]['content']['value'],
+	): SQONBuilder => {
 		if (isFilter(_sqon)) {
 			// Builder is just one filter, check if it matches our applied filter and replace it, or join them both with an and
 			if (_sqon.op === op && _sqon.content.fieldName === fieldName) {

@@ -52,10 +52,10 @@ export const ScalarFilterValue = zod.number();
 export type FilterValue = zod.infer<typeof FilterValue>;
 export const FilterValue = zod.union([ArrayFilterValue, ScalarFilterValue]);
 
-export type FilterValueMap = {
-	[ArrayFilterKeys.In]: ArrayFilterValue;
-	[ScalarFilterKeys.GreaterThan]: ScalarFilterValue;
-	[ScalarFilterKeys.LesserThan]: ScalarFilterValue;
+export type FilterTypeMap = {
+	[ArrayFilterKeys.In]: InFilter;
+	[ScalarFilterKeys.GreaterThan]: GreaterThanFilter;
+	[ScalarFilterKeys.LesserThan]: LesserThanFilter;
 };
 
 /* ===== Specific Filters ==== */
