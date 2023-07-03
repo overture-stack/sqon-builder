@@ -1036,6 +1036,47 @@ describe('SQONBuilder', () => {
 					.not(SQONBuilder.gt('age', 25));
 				expect(output).deep.contain(expectedSqon);
 			});
+			it('does not combine nested or with different pivots', () => {
+				// This test puts the pivot in a different layer than the similar test in builder functions.and
+				// So its useful to have them both.
+				const expectedSqon: SQON = {
+					op: CombinationKeys.And,
+					content: [
+						{
+							op: FilterKeys.In,
+							content: {
+								fieldName: 'name',
+								value: ['Jim', 'Bob'],
+							},
+						},
+						{
+							op: CombinationKeys.Not,
+							content: [
+								{
+									op: FilterKeys.GreaterThan,
+									content: {
+										fieldName: 'user.age',
+										value: 30,
+									},
+								},
+								{
+									op: FilterKeys.LesserThan,
+									content: {
+										fieldName: 'user.score',
+										value: 50,
+									},
+								},
+							],
+							pivot: 'user',
+						},
+					],
+				};
+				const output = SQONBuilder.in('name', ['Jim', 'Bob']).not(
+					[SQONBuilder.gt('user.age', 30), SQONBuilder.lt('user.score', 50)],
+					'user',
+				);
+				expect(output).deep.contain(expectedSqon);
+			});
 		});
 		describe('removeExactFilter', () => {
 			it('removes matching filter', () => {

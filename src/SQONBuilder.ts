@@ -307,8 +307,9 @@ const _not =
 		const notOp: CombinationOperator = {
 			op: CombinationKeys.Not,
 			content: asArray(content),
+			pivot,
 		};
-		return createBuilder(combine(CombinationKeys.And, original, notOp, pivot));
+		return createBuilder(combine(CombinationKeys.And, original, notOp));
 	};
 const _in =
 	(original: SQON) =>
