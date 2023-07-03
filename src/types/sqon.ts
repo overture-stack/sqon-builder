@@ -142,3 +142,8 @@ export const isArrayFilterKey = (input: unknown): input is ArrayFilterKey =>
 const scalarFilterKeys: string[] = Object.values(ScalarFilterKeys);
 export const isScalarFilterKey = (input: unknown): input is ScalarFilterKey =>
 	typeof input === 'string' && scalarFilterKeys.includes(input);
+
+export const isArrayFilterValue = (value: unknown): value is ArrayFilterValue =>
+	ArrayFilterValue.safeParse(value).success;
+export const isScalarFilterValue = (value: unknown): value is ScalarFilterValue =>
+	ScalarFilterValue.safeParse(value).success;
