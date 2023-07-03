@@ -14,9 +14,6 @@ export const createFilter = <Key extends FilterKey>(
 	op: Key,
 	value: FilterTypeMap[Key]['content']['value'],
 ): FilterOperator => {
-	if (op === 'gt') {
-		const x = value;
-	}
 	if (isArrayFilterKey(op)) {
 		return { op, content: { fieldName, value: asArray(value) } };
 	} else if (isScalarFilterKey(op) && isScalarFilterValue(value)) {
