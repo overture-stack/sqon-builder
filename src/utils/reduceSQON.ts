@@ -33,8 +33,12 @@ const reduceSQON = (sqon: SQON): SQON => {
 		const output: CombinationOperator = {
 			op: sqon.op,
 			content: [],
-			pivot: sqon.pivot,
 		};
+		if (sqon.pivot !== undefined) {
+			// dont automatically assign `pivot: undefined` to an operator, it will then appear in every output and that is not desired
+			// optionally assigning pivot only if it has a value avoids this
+			output.pivot = sqon.pivot;
+		}
 		for (const innerSqon of sqon.content) {
 			// Filters are added to output content
 			if (isFilter(innerSqon)) {

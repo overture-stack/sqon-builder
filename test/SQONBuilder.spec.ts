@@ -114,7 +114,7 @@ describe('SQONBuilder', () => {
 			expect(emptySQON()).deep.equal(expected);
 		});
 	});
-	describe('Static functions', () => {
+	describe('static functions', () => {
 		describe('in', () => {
 			it('single number', () => {
 				const expectedSqon: SQON = {
@@ -279,6 +279,30 @@ describe('SQONBuilder', () => {
 				]);
 				expect(builder).deep.contains(expectedSqon);
 			});
+			it('accepts pivot values and includes them in opeartor', () => {
+				const expectedSqon: SQON = {
+					op: CombinationKeys.And,
+					content: [
+						{
+							op: FilterKeys.GreaterThan,
+							content: {
+								fieldName: 'user.score',
+								value: 95,
+							},
+						},
+						{
+							op: FilterKeys.LesserThan,
+							content: {
+								fieldName: 'user.age',
+								value: 40,
+							},
+						},
+					],
+					pivot: 'user',
+				};
+				const input = SQONBuilder.and([SQONBuilder.gt('user.score', 95), SQONBuilder.lt('user.age', 40)], 'user');
+				expect(input.toValue()).deep.equals(expectedSqon);
+			});
 		});
 		describe('or', () => {
 			it('combines array of filters', () => {
@@ -362,6 +386,30 @@ describe('SQONBuilder', () => {
 				};
 				const builder = SQONBuilder.or([SQONBuilder.gt('score', 95), SQONBuilder.gt('score', 85)]);
 				expect(builder).deep.contains(expectedSqon);
+			});
+			it('accepts pivot values and includes them in opeartor', () => {
+				const expectedSqon: SQON = {
+					op: CombinationKeys.Or,
+					content: [
+						{
+							op: FilterKeys.GreaterThan,
+							content: {
+								fieldName: 'user.score',
+								value: 95,
+							},
+						},
+						{
+							op: FilterKeys.LesserThan,
+							content: {
+								fieldName: 'user.age',
+								value: 40,
+							},
+						},
+					],
+					pivot: 'user',
+				};
+				const input = SQONBuilder.or([SQONBuilder.gt('user.score', 95), SQONBuilder.lt('user.age', 40)], 'user');
+				expect(input.toValue()).deep.equals(expectedSqon);
 			});
 		});
 		describe('not', () => {
@@ -485,7 +533,7 @@ describe('SQONBuilder', () => {
 			});
 		});
 	});
-	describe('Builder functions', () => {
+	describe('builder functions', () => {
 		describe('toString', () => {
 			it('returns string matching sqon', () => {
 				const expectedString = `{"op":"in","content":{"fieldName":"name","value":["Jim"]}}`;
@@ -772,6 +820,45 @@ describe('SQONBuilder', () => {
 				);
 				expect(output).deep.contain(expectedSqon);
 			});
+			it('does not combine nested and with different pivots', () => {
+				const expectedSqon: SQON = {
+					op: CombinationKeys.And,
+					content: [
+						{
+							op: CombinationKeys.And,
+							content: [
+								{
+									op: FilterKeys.GreaterThan,
+									content: {
+										fieldName: 'age',
+										value: 30,
+									},
+								},
+								{
+									op: FilterKeys.LesserThan,
+									content: {
+										fieldName: 'score',
+										value: 50,
+									},
+								},
+							],
+						},
+						{
+							op: FilterKeys.In,
+							content: {
+								fieldName: 'user.name',
+								value: ['Jim', 'Bob'],
+							},
+						},
+					],
+					pivot: 'user',
+				};
+				const output = SQONBuilder.gt('age', 30)
+					.lt('score', 50)
+					.and(SQONBuilder.in('user.name', ['Jim', 'Bob']), 'user');
+
+				expect(output).deep.contain(expectedSqon);
+			});
 		});
 		describe('or', () => {
 			it('gt().or() collects filters into single operator', () => {
@@ -827,6 +914,47 @@ describe('SQONBuilder', () => {
 				const output = SQONBuilder.in('name', ['Jim', 'Bob'])
 					.or(SQONBuilder.lt('score', 50))
 					.or(SQONBuilder.gt('age', 25));
+				expect(output).deep.contain(expectedSqon);
+			});
+			it('does not combine nested or with different pivots', () => {
+				// This test puts the pivot in a different layer than the similar test in builder functions.and
+				// So its useful to have them both.
+				const expectedSqon: SQON = {
+					op: CombinationKeys.Or,
+					content: [
+						{
+							op: CombinationKeys.Or,
+							content: [
+								{
+									op: FilterKeys.GreaterThan,
+									content: {
+										fieldName: 'user.age',
+										value: 30,
+									},
+								},
+								{
+									op: FilterKeys.LesserThan,
+									content: {
+										fieldName: 'user.score',
+										value: 50,
+									},
+								},
+							],
+							pivot: 'user',
+						},
+						{
+							op: FilterKeys.In,
+							content: {
+								fieldName: 'name',
+								value: ['Jim', 'Bob'],
+							},
+						},
+					],
+				};
+				const output = SQONBuilder.or([SQONBuilder.gt('user.age', 30), SQONBuilder.lt('user.score', 50)], 'user').or(
+					SQONBuilder.in('name', ['Jim', 'Bob']),
+				);
+
 				expect(output).deep.contain(expectedSqon);
 			});
 		});

@@ -179,5 +179,51 @@ describe('utils/reduceSQON', () => {
 			const expected = { op: CombinationKeys.And, content: [] };
 			expect(reduceSQON(input)).deep.equal(expected);
 		});
+		it('does not output undefined pivot', () => {
+			const input = {
+				op: CombinationKeys.And,
+				content: [
+					{ op: CombinationKeys.And, content: [] },
+					{ op: CombinationKeys.Or, content: [] },
+					{ op: CombinationKeys.Not, content: [] },
+				],
+			};
+			expect(reduceSQON(input)).not.haveOwnProperty('pivot');
+		});
+		it('outputs a defined pivot', () => {
+			const input = {
+				op: CombinationKeys.And,
+				content: [
+					{ op: CombinationKeys.And, content: [] },
+					{ op: CombinationKeys.Or, content: [] },
+					{ op: CombinationKeys.Not, content: [] },
+				],
+				pivot: 'user',
+			};
+			expect(reduceSQON(input)).haveOwnProperty('pivot');
+			expect(reduceSQON(input)).deep.contain({ pivot: 'user' });
+		});
+		it('does not combine operators with different pivots', () => {
+			const filterA: FilterOperator = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Sue'] } };
+			const filterB: FilterOperator = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 2 } };
+			const filterC: FilterOperator = { op: FilterKeys.LesserThan, content: { fieldName: 'score', value: 10 } };
+			const comboA: CombinationOperator = { op: CombinationKeys.And, content: [filterA, filterB], pivot: 'pilot' };
+			const comboB: CombinationOperator = { op: CombinationKeys.And, content: [filterC], pivot: 'actor' };
+			const input: CombinationOperator = { op: CombinationKeys.And, content: [comboA, comboB], pivot: 'doctor' };
+
+			// Remove AND around single filter, keep the other AND with different pivot
+			const expected = { op: CombinationKeys.And, content: [comboA, filterC], pivot: 'doctor' };
+			expect(reduceSQON(input)).deep.equal(expected);
+		});
+		it('combines operators with same pivots', () => {
+			const filterA: FilterOperator = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Sue'] } };
+			const filterB: FilterOperator = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 2 } };
+			const filterC: FilterOperator = { op: FilterKeys.LesserThan, content: { fieldName: 'score', value: 10 } };
+			const comboA: CombinationOperator = { op: CombinationKeys.And, content: [filterA, filterB], pivot: 'user' };
+			const comboB: CombinationOperator = { op: CombinationKeys.And, content: [filterC], pivot: 'user' };
+			const input: CombinationOperator = { op: CombinationKeys.And, content: [comboA, comboB], pivot: 'user' };
+			const expected = { op: CombinationKeys.And, content: [filterA, filterB, filterC], pivot: 'user' };
+			expect(reduceSQON(input)).deep.equal(expected);
+		});
 	});
 });
