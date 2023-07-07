@@ -214,7 +214,7 @@ The `SQONBuilder` function also provides many static functions that can be used 
 
 Example: `const builder: SQONBuilder = SQONBuilder.in('name', 'Jim');`
 
-The `SQONBuilder` object that is returned stores the value of the generated SQON which can be accessed as a string with `.toString()` or as an object with `.toValue()`. From the `SQONBuilder` object you can now combine the stored SQON value with other filters or combination operations.
+The returned `SQONBuilder` object stores the value of the generated SQON which can be accessed as a string with `.toString()` or as an object with `.toValue()`. From the `SQONBuilder` object you can now combine the stored SQON value with other filters or combination operations.
 
 Example: `builder.lt('age','30').gt('score',95);`
 
