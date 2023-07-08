@@ -454,7 +454,7 @@ A SQON is composed from a series of nested `Operators` that take the general str
 ```
 
 There are two types of Operators:
-1. `FilterOperators` - Define a rule used to filter data based on matches to a specific field., for example the `in` filter will find all data that has a field value matching one of the included values in the filter.
+1. `FilterOperators` - Define a rule used to filter data based on matches to a specific field. For example, the `in` filter will find all data that has a field value matching one of the included values in the filter.
 2. `CombinationOperators` - Combine multiple operators with boolean logic. 
 
 #### FilterOperators
