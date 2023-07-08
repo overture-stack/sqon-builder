@@ -28,12 +28,12 @@ export const checkMatchingArrays = <T>(a: T[], b: T[]): boolean => {
  * @returns
  */
 const checkMatchingFilter = (a: FilterOperator, b: FilterOperator): boolean => {
-	if (a.op !== b.op || a.content.fieldName !== b.content.fieldName) {
-		return false;
+	if (a.op === b.op && a.content.fieldName === b.content.fieldName) {
+		// Clone values into arrays and sort them so we can compare item by item.
+		return checkMatchingArrays(asArray(a.content.value), asArray(b.content.value));
 	}
 
-	// Clone values into arrays and sort them so we can compare item by item.
-	return checkMatchingArrays(asArray(a.content.value), asArray(b.content.value));
+	return false;
 };
 
 export default checkMatchingFilter;
