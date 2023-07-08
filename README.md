@@ -210,7 +210,7 @@ The package default export is the `SQONBuilder`. This is a function that will ge
 
 Example: `const builder: SQONBuilder = SQONBuilder({op: 'in', content: {fieldName: 'name', value: ['Jim']}});`
 
-The `SQONBuilder` function also provides many static functions that can be used to generate a new SQONBuilder without having a SQON to start with.
+The `SQONBuilder` function also provides many static methods that can be used to generate a new SQONBuilder without having a SQON to start with.
 
 Example: `const builder: SQONBuilder = SQONBuilder.in('name', 'Jim');`
 
