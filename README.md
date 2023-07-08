@@ -274,7 +274,7 @@ SQONBuilder.from(
 );
 ```
 
-This differs from the default function because it will accept any input. The use case for this function is when you have a JS object that could potentially be a valid SQON, you can pass this `uncheckedObject` to `SQONBuilder.from(uncheckedObject)` and validation will be performed before the `SQONBuilder` is returned, if possible.
+This differs from the default function in that it will accept any input (i.e. type `unknown`). The use case for this function is when you have a JS object that could potentially be a valid SQON, you can pass this `uncheckedObject` to `SQONBuilder.from(uncheckedObject)` and validation will be performed before the `SQONBuilder` is returned, if possible.
 
 If the provided string cannot be parsed from JSON a `SyntaxError` will be thrown.
 
