@@ -408,7 +408,8 @@ const reduced = reduceSQON(sqon);
 The `checkMatchingFilter` function will compare two `FilterOperators` and return is they match in all properties. This ensures they have the same filter operation (`op` value), same `fieldName` and matching `value`. Note that for array values, the match is performed independent of order and after removing duplicates - it is a match on the logical content not on the exact array.
 
 ```ts
-import { checkMatchingFilter } from '@overture-stack/sqon-builder`;
+import { checkMatchingFilter } from '@overture-stack/sqon-builder';
+
 const filterA = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Bob', 'May'] } };
 const filterB = {	op: FilterKeys.In, content: { fieldName: 'name', value: ['May', 'Jim', 'Bob'] } };
 
