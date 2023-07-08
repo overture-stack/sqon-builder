@@ -11,7 +11,7 @@ import {
 	reduceSQON,
 } from '../../src';
 
-describe('reduceSQON', () => {
+describe('utils/reduceSQON', () => {
 	describe('filters', () => {
 		// Filters of the same type and same name in the same combination operator can combine into a single filter
 		it('combines multiple `in` filters', () => {

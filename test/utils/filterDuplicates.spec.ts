@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import filterDuplicates from '../../src/utils/filterDuplicates';
 
-describe('filterDuplicates', () => {
+describe('utils/filterDuplicates', () => {
 	it('no duplicates - not modified', () => {
 		const input = [1, 2, 3, 4];
 		const output = input.filter(filterDuplicates);

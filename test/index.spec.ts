@@ -12,12 +12,16 @@ describe('index', () => {
 
 			// Test it builds
 			expect(SQONBuilder(`{"op":"in","content":{"fieldName":"name","value":["Jim"]}}`).toValue()).deep.equal({
-				op: Exports.ArrayFilterKeys.In,
+				op: Exports.FilterKeys.In,
 				content: {
 					fieldName: 'name',
 					value: ['Jim'],
 				},
 			});
+		});
+		it('emptySQON is exported', () => {
+			const { default: SQONBuilder } = Exports;
+			expect(typeof SQONBuilder).equal('function');
 		});
 		it('reduceSQON is exported', () => {
 			const { reduceSQON } = Exports;
