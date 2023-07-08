@@ -198,20 +198,21 @@ const createBuilder = (sqon: SQON): SQONBuilder => {
 		// Filter content to remove all exact matches
 		const filteredContent = _sqon.content.filter((operator) => isCombination(operator) || !isMatchArgs(operator));
 
-		if (valuesToFilter !== undefined) {
-			// we also need to find partial matches for array filters and remove any values that are included in our values array here
-			// map over the filtered content to find any partial matches, then filter values out of the partial match, otherwise return the unmodified operator
-			const outputContent = filteredContent.map((operator) =>
-				isArrayFilter(operator) && isPartialMatchArgs(operator)
-					? filterValuesFromFilter(operator, valuesToFilter)
-					: operator,
-			);
-			const updated: CombinationOperator = { op: _sqon.op, content: outputContent };
-			return createBuilder(updated);
-		} else {
+		if (valuesToFilter === undefined) {
 			const updated: CombinationOperator = { op: _sqon.op, content: filteredContent };
 			return createBuilder(updated);
 		}
+
+		// since we have valuesToFilter, we need to check for partial matches of array filters and remove any values
+		// that are included in our values array here map over the filtered content to find any partial matches, then
+		// filter values out of the partial match, otherwise return the unmodified operator
+		const outputContent = filteredContent.map((operator) =>
+			isArrayFilter(operator) && isPartialMatchArgs(operator)
+				? filterValuesFromFilter(operator, valuesToFilter)
+				: operator,
+		);
+		const updated: CombinationOperator = { op: _sqon.op, content: outputContent };
+		return createBuilder(updated);
 	};
 
 	const setFilter = <Key extends FilterKey>(
