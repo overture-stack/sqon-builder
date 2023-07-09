@@ -26,9 +26,9 @@ import { createFilter } from './utils/createFilter';
 import reduceSQON from './utils/reduceSQON';
 
 type SQONBuilder = {
-	and: (content: SQON | SQON[]) => SQONBuilder;
-	or: (content: SQON | SQON[]) => SQONBuilder;
-	not: (content: SQON | SQON[]) => SQONBuilder;
+	and: (content: SQON | SQON[], pivot?: string) => SQONBuilder;
+	or: (content: SQON | SQON[], pivot?: string) => SQONBuilder;
+	not: (content: SQON | SQON[], pivot?: string) => SQONBuilder;
 
 	in: (fieldName: string, value: ArrayFilterValue) => SQONBuilder;
 	gt: (fieldName: string, value: ScalarFilterValue) => SQONBuilder;
@@ -147,7 +147,7 @@ const createBuilder = (sqon: SQON): SQONBuilder => {
 			const filteredContent = _sqon.content.filter(
 				(operator) => !isFilter(operator) || !checkMatchingFilter(operator, filter),
 			);
-			const updated: CombinationOperator = { op: _sqon.op, content: filteredContent };
+			const updated: CombinationOperator = { op: _sqon.op, content: filteredContent, pivot: _sqon.pivot };
 			return createBuilder(updated);
 		}
 	};
@@ -199,7 +199,7 @@ const createBuilder = (sqon: SQON): SQONBuilder => {
 		const filteredContent = _sqon.content.filter((operator) => isCombination(operator) || !isMatchArgs(operator));
 
 		if (valuesToFilter === undefined) {
-			const updated: CombinationOperator = { op: _sqon.op, content: filteredContent };
+			const updated: CombinationOperator = { op: _sqon.op, content: filteredContent, pivot: _sqon.pivot };
 			return createBuilder(updated);
 		}
 
@@ -211,7 +211,7 @@ const createBuilder = (sqon: SQON): SQONBuilder => {
 				? filterValuesFromFilter(operator, valuesToFilter)
 				: operator,
 		);
-		const updated: CombinationOperator = { op: _sqon.op, content: outputContent };
+		const updated: CombinationOperator = { op: _sqon.op, content: outputContent, pivot: _sqon.pivot };
 		return createBuilder(updated);
 	};
 
@@ -261,18 +261,22 @@ const createBuilder = (sqon: SQON): SQONBuilder => {
 	};
 };
 
-const combine = (op: CombinationKey, sqon: SQON, content: SQON | SQON[]): CombinationOperator => {
-	if (sqon.op === op) {
-		return {
-			op,
-			content: [...sqon.content, ...asArray(content)],
-		};
+const combine = (op: CombinationKey, sqon: SQON, content: SQON | SQON[], pivot?: string): CombinationOperator => {
+	const output: CombinationOperator = { op, content: [] };
+	if (sqon.op === op && sqon.pivot === pivot) {
+		// provided sqon has same operation as requested:
+		//   don't add wrapper, insert new content into existing sqon
+		output.content = output.content.concat(sqon.content, content);
 	} else {
-		return {
-			op,
-			content: [sqon, ...asArray(content)],
-		};
+		output.content = output.content.concat(sqon, content);
 	}
+
+	if (pivot !== undefined) {
+		// dont automatically assign pivot: undefined to an operator, it will then appear in every output and that is not desired
+		// optionally assigning pivot only if it has a value avoids this
+		output.pivot = pivot;
+	}
+	return output;
 };
 
 /**
@@ -291,18 +295,19 @@ const _from = (input: unknown): SQONBuilder => {
 };
 const _and =
 	(original: SQON) =>
-	(content: SQON | SQON[]): SQONBuilder =>
-		createBuilder(combine(CombinationKeys.And, original, content));
+	(content: SQON | SQON[], pivot?: string): SQONBuilder =>
+		createBuilder(combine(CombinationKeys.And, original, content, pivot));
 const _or =
 	(original: SQON) =>
-	(content: SQON | SQON[]): SQONBuilder =>
-		createBuilder(combine(CombinationKeys.Or, original, content));
+	(content: SQON | SQON[], pivot?: string): SQONBuilder =>
+		createBuilder(combine(CombinationKeys.Or, original, content, pivot));
 const _not =
 	(original: SQON) =>
-	(content: SQON | SQON[]): SQONBuilder => {
+	(content: SQON | SQON[], pivot?: string): SQONBuilder => {
 		const notOp: CombinationOperator = {
 			op: CombinationKeys.Not,
 			content: asArray(content),
+			pivot,
 		};
 		return createBuilder(combine(CombinationKeys.And, original, notOp));
 	};

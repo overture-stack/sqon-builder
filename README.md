@@ -241,23 +241,23 @@ Lesser Than operator. Create a filter requiring the given field to be lesser tha
 Example: `SQONBuilder.lt('count', 100)`
 
 #### Combine: And
-`SQONBuilder.and(sqon: SQON | SQON[]) => SQONBuilder`
+`SQONBuilder.and(sqon: SQON | SQON[], pivot?: string) => SQONBuilder`
 
-All filters in the resulting SQON must be true.
+Wrap the provided SQONs in an `and` operator, creating a filter requiring all the nested filters to be true.
 
 Example: `SQONBuilder.and( [someSqon, anotherSqon] )`
 
 #### Combine: Or
-`SQONBuilder.or(sqon: SQON | SQON[]) => SQONBuilder`
+`SQONBuilder.or(sqon: SQON | SQON[], pivot?: string) => SQONBuilder`
 
-At least one filter in the resulting SQON must be true.
+Wrap the provided SQONs in an `and` operator, creating a filter requiring at least one of the nested filters to be true.
 
 Example: `SQONBuilder.or( [someSqon, anotherSqon] )`
 
 #### Combine: Not
-`SQONBuilder.not(sqon: SQON | SQON[]) => SQONBuilder`
+`SQONBuilder.not(sqon: SQON | SQON[], pivot?: string) => SQONBuilder`
 
-None of the filters in the resulting SQON can be true.
+Wrap the provided SQONs in a `not` operator, creating a filter requiring all the nested filters to be false.
 
 Example: `SQONBuilder.not( [someSqon] )`
 

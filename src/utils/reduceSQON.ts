@@ -34,6 +34,11 @@ const reduceSQON = (sqon: SQON): SQON => {
 			op: sqon.op,
 			content: [],
 		};
+		if (sqon.pivot !== undefined) {
+			// dont automatically assign `pivot: undefined` to an operator, it will then appear in every output and that is not desired
+			// optionally assigning pivot only if it has a value avoids this
+			output.pivot = sqon.pivot;
+		}
 		for (const innerSqon of sqon.content) {
 			// Filters are added to output content
 			if (isFilter(innerSqon)) {
@@ -101,7 +106,7 @@ const reduceSQON = (sqon: SQON): SQON => {
 					output.content.push(innerSqon);
 					continue;
 				}
-				if (innerSqon.op === output.op) {
+				if (innerSqon.op === output.op && innerSqon.pivot === output.pivot) {
 					// 4. inner sqon op matches outter sqon, remove inner combination and use the content
 					output.content.push(...innerSqon.content);
 					continue;
