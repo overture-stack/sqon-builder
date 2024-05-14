@@ -1,6 +1,11 @@
+.nyc_output/
+node_modules/
 src/
 
 .babelrc*
 .eslintrc*
+.groovylintrc*
+.mocharc*
 
+Jenkinsfile
 tsconfig*
