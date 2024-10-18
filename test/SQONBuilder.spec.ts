@@ -591,7 +591,7 @@ describe('SQONBuilder', () => {
 						value: ['Jim', 'Bob', 'Greg'],
 					},
 				};
-				const output = SQONBuilder.in('name', 'Jim').in('name', ['Bob', 'Greg']);
+				const output = SQONBuilder.in('name', 'Jim').or(SQONBuilder.in('name', ['Bob', 'Greg']));
 				expect(output).deep.contains(expectedSqon);
 			});
 			it('in(a).in(b) on different names combines with and', () => {
@@ -619,7 +619,7 @@ describe('SQONBuilder', () => {
 			});
 			it('in(a).in(b).in(a) collects like names and combines in and', () => {
 				const expectedSqon: SQON = {
-					op: CombinationKeys.And,
+					op: CombinationKeys.Or,
 					content: [
 						{
 							op: FilterKeys.In,
@@ -637,7 +637,9 @@ describe('SQONBuilder', () => {
 						},
 					],
 				};
-				const output = SQONBuilder.in('name', 'Jim').in('class', ['Bio']).in('name', 'Bob');
+				const output = SQONBuilder.in('name', 'Jim')
+					.or(SQONBuilder.in('class', ['Bio']))
+					.or(SQONBuilder.in('name', 'Bob'));
 				expect(output).deep.contains(expectedSqon);
 			});
 		});

@@ -14,21 +14,42 @@ import {
 describe('utils/reduceSQON', () => {
 	describe('filters', () => {
 		// Filters of the same type and same name in the same combination operator can combine into a single filter
-		it('combines multiple `in` filters', () => {
-			const filterA: InFilter = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Sue'] } };
-			const filterB: InFilter = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Bob', 'May'] } };
+		it('`in` filter within `and` is not reduced ', () => {
+			/**
+			 * There is a use case where we want to filter data on a field with an array of values,
+			 * in that situation the logic of running a test against two separate arrays is possible. We should not reduce
+			 * two `in` filters in an `and` operator.
+			 */
+			const filterA: InFilter = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Sue', 'May'] } };
+			const filterB: InFilter = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Bob', 'May'] } };
 			const input: SQON = { op: CombinationKeys.And, content: [filterA, filterB] };
 
-			const expected = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Sue', 'Bob', 'May'] } };
+			const expected = input;
 
 			const output = reduceSQON(input);
 
 			expect(output).deep.equal(expected);
 		});
-		it('removes duplicates in array filter', () => {
+		it('`in` filter within `not` is not reduced ', () => {
+			/**
+			 * There is a use case where we want to filter data on a field with an array of values,
+			 * in that situation the logic of running a test against two separate arrays is possible. We should not reduce
+			 * two `in` filters in a `not` operator.
+			 */
 			const filterA: InFilter = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Sue', 'May'] } };
 			const filterB: InFilter = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Bob', 'May'] } };
-			const input: SQON = { op: CombinationKeys.And, content: [filterA, filterB] };
+			const input: SQON = { op: CombinationKeys.Not, content: [filterA, filterB] };
+
+			const expected = input;
+
+			const output = reduceSQON(input);
+
+			expect(output).deep.equal(expected);
+		});
+		it('`in` filters within `or` is combined into single array with duplicates removed', () => {
+			const filterA: InFilter = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Sue', 'May'] } };
+			const filterB: InFilter = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Bob', 'May'] } };
+			const input: SQON = { op: CombinationKeys.Or, content: [filterA, filterB] };
 
 			const expected = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Sue', 'May', 'Bob'] } };
 
@@ -36,35 +57,38 @@ describe('utils/reduceSQON', () => {
 
 			expect(output).deep.equal(expected);
 		});
-		it('combines multiple `greaterThan` within `and` using max', () => {
+		it('`greaterThan` filters within `and` are combined using max', () => {
 			const filterA: GreaterThanFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 1 } };
 			const filterB: GreaterThanFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 2 } };
-			const input: SQON = { op: CombinationKeys.And, content: [filterA, filterB] };
+			const filterC: GreaterThanFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 4 } };
+			const input: SQON = { op: CombinationKeys.And, content: [filterA, filterB, filterC] };
 
-			const expected = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 2 } };
+			const expected = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 4 } };
 
 			const output = reduceSQON(input);
 
 			expect(output).deep.equal(expected);
 		});
-		it('combines multiple `greaterThan` within `not` using max', () => {
+		it('`greaterThan` fitlers within `not` are combined using max', () => {
 			const filterA: GreaterThanFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 1 } };
 			const filterB: GreaterThanFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 2 } };
-			const input: SQON = { op: CombinationKeys.Not, content: [filterA, filterB] };
+			const filterC: GreaterThanFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 4 } };
+			const input: SQON = { op: CombinationKeys.Not, content: [filterA, filterB, filterC] };
 
 			const expected = {
 				op: CombinationKeys.Not,
-				content: [{ op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 2 } }],
+				content: [{ op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 4 } }],
 			};
 
 			const output = reduceSQON(input);
 
 			expect(output).deep.equal(expected);
 		});
-		it('combines multiple `greaterThan` within `or` using min', () => {
+		it('`greaterThan` filters within `or` are combined using min', () => {
 			const filterA: GreaterThanFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 1 } };
 			const filterB: GreaterThanFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 2 } };
-			const input: SQON = { op: CombinationKeys.Or, content: [filterA, filterB] };
+			const filterC: GreaterThanFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 4 } };
+			const input: SQON = { op: CombinationKeys.Or, content: [filterA, filterB, filterC] };
 
 			const expected = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 1 } };
 
@@ -72,10 +96,11 @@ describe('utils/reduceSQON', () => {
 
 			expect(output).deep.equal(expected);
 		});
-		it('combines multiple `lesserThan` within `and` using min', () => {
+		it('`lesserThan` filters within `and` are combined using min', () => {
 			const filterA: LesserThanFilter = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 1 } };
 			const filterB: LesserThanFilter = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 2 } };
-			const input: SQON = { op: CombinationKeys.And, content: [filterA, filterB] };
+			const filterC: LesserThanFilter = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 4 } };
+			const input: SQON = { op: CombinationKeys.And, content: [filterA, filterB, filterC] };
 
 			const expected = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 1 } };
 
@@ -83,10 +108,11 @@ describe('utils/reduceSQON', () => {
 
 			expect(output).deep.equal(expected);
 		});
-		it('combines multiple `lesserThan` within `not` using min', () => {
+		it('`lesserThan` filters within `not` are combined using min', () => {
 			const filterA: LesserThanFilter = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 1 } };
 			const filterB: LesserThanFilter = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 2 } };
-			const input: SQON = { op: CombinationKeys.Not, content: [filterA, filterB] };
+			const filterC: LesserThanFilter = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 4 } };
+			const input: SQON = { op: CombinationKeys.Not, content: [filterA, filterB, filterC] };
 
 			const expected = {
 				op: CombinationKeys.Not,
@@ -97,12 +123,13 @@ describe('utils/reduceSQON', () => {
 
 			expect(output).deep.equal(expected);
 		});
-		it('combines multiple `lesserThan` within `or` using max', () => {
+		it('`lesserThan` filters within `or` are combined using max', () => {
 			const filterA: LesserThanFilter = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 1 } };
 			const filterB: LesserThanFilter = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 2 } };
-			const input: SQON = { op: CombinationKeys.Or, content: [filterA, filterB] };
+			const filterC: LesserThanFilter = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 4 } };
+			const input: SQON = { op: CombinationKeys.Or, content: [filterA, filterB, filterC] };
 
-			const expected = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 2 } };
+			const expected = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 4 } };
 
 			const output = reduceSQON(input);
 

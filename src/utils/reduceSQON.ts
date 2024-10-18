@@ -11,6 +11,11 @@ import {
 import asArray from './asArray';
 import { createFilter } from './createFilter';
 import filterDuplicates from './filterDuplicates';
+/**
+ * For an ArrayFilter, remove duplicate entries from the array of values.
+ * @param filter
+ * @returns
+ */
 const deduplicateValues = (filter: FilterOperator): FilterOperator => {
 	if (isArrayFilter(filter)) {
 		const value = asArray(filter.content.value).filter(filterDuplicates);
@@ -53,7 +58,7 @@ const reduceSQON = (sqon: SQON): SQON => {
 					 * - 2. multiple GT on the same 'or' combo can be a single with the lesser value
 					 * - 3. multiple LT on the same 'and'/'not' combo can be the lesser value
 					 * - 4. multiple GT on the same 'or' combo can be the greater value
-					 * - 5. multiple IN on the same 'or'/'and'/'not' combo can be combined into a list
+					 * - 5. multiple IN on the same 'or' combo can be combined into a single list
 					 */
 					// In this if/else chain we check both the match and the innersqon match. we know this is true thanks to the .find that found the match, but this is needed for the type checker
 					if (match.op === FilterKeys.GreaterThan && innerSqon.op === FilterKeys.GreaterThan) {
@@ -68,7 +73,7 @@ const reduceSQON = (sqon: SQON): SQON => {
 
 					if (match.op === FilterKeys.LesserThan && innerSqon.op === FilterKeys.LesserThan) {
 						if (output.op === CombinationKeys.And || output.op === CombinationKeys.Not) {
-							// 3. multiple LT on the same 'and'/'not combo can be the lesser value
+							// 3. multiple LT on the same 'and'/'not' combo can be the lesser value
 							match.content.value = Math.min(match.content.value, innerSqon.content.value);
 						} else {
 							// 4. multiple LT on the same 'or' combo can be the greater value
@@ -77,8 +82,14 @@ const reduceSQON = (sqon: SQON): SQON => {
 					}
 
 					if (match.op === FilterKeys.In && innerSqon.op === FilterKeys.In) {
-						// 5. multiple IN on the same 'or'/'and'/'not' combo can be combined into a list
-						match.content.value = [...asArray(match.content.value), ...asArray(innerSqon.content.value)];
+						if (output.op === CombinationKeys.Or) {
+							// 5. multiple IN on the same 'or' combo can be combined into a list
+							match.content.value = [...asArray(match.content.value), ...asArray(innerSqon.content.value)];
+							// Note that we cannot reduce 'and'/'not' combos since there are cases for testing inclusion
+							// in multiple separate lists when the tested property has an array of values.
+						} else {
+							output.content.push(innerSqon);
+						}
 					}
 				} else {
 					// Did not find a matching filter in the existing output, so we add this one
