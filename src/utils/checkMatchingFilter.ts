@@ -1,6 +1,6 @@
-import { FilterOperator, isArrayFilter } from '../types/sqon';
-import asArray from './asArray';
-import filterDuplicates from './filterDuplicates';
+import { FilterOperator, isArrayFilter } from '../types/sqon.js';
+import asArray from './asArray.js';
+import filterDuplicates from './filterDuplicates.js';
 
 /**
  * Compare two arrays ensuring they have the same elements. This removes duplicates and compares them

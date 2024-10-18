@@ -3,11 +3,10 @@ import {
 	FilterOperator,
 	FilterTypeMap,
 	isArrayFilterKey,
-	isArrayFilterValue,
 	isScalarFilterKey,
 	isScalarFilterValue,
-} from '../types/sqon';
-import asArray from './asArray';
+} from '../types/sqon.js';
+import asArray from './asArray.js';
 
 export const createFilter = <Key extends FilterKey>(
 	fieldName: string,

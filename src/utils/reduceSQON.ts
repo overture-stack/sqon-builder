@@ -4,13 +4,12 @@ import {
 	FilterKeys,
 	FilterOperator,
 	SQON,
-	ScalarFilterKeys,
 	isArrayFilter,
 	isFilter,
-} from '../types/sqon';
-import asArray from './asArray';
-import { createFilter } from './createFilter';
-import filterDuplicates from './filterDuplicates';
+} from '../types/sqon.js';
+import asArray from './asArray.js';
+import { createFilter } from './createFilter.js';
+import filterDuplicates from './filterDuplicates.js';
 /**
  * For an ArrayFilter, remove duplicate entries from the array of values.
  * @param filter

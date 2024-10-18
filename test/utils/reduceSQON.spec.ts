@@ -9,7 +9,7 @@ import {
 	LesserThanFilter,
 	SQON,
 	reduceSQON,
-} from '../../src';
+} from '../../src/index.js';
 
 describe('utils/reduceSQON', () => {
 	describe('filters', () => {

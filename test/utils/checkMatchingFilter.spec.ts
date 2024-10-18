@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { ArrayFilter, FilterKeys, FilterOperator, ScalarFilter } from '../../src';
-import checkMatchingFilter, { checkMatchingArrays } from '../../src/utils/checkMatchingFilter';
+import { ArrayFilter, FilterKeys, FilterOperator, ScalarFilter } from '../../src/index.js';
+import checkMatchingFilter, { checkMatchingArrays } from '../../src/utils/checkMatchingFilter.js';
 
 describe('utils/checkMatchingFilter', () => {
 	describe('checkMatchingArrays', () => {

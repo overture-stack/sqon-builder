@@ -2,13 +2,13 @@
 	"compilerOptions": {
 		"strict": true,
 		"lib": ["ESNext"],
-		"target": "es5",
-		"module": "CommonJS",
+		"target": "ESNext",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
 		"outDir": "./dist",
 		"declaration": true,
-		"removeComments": true,
 		"sourceMap": true,
-		"rootDir": "src/"
+		"removeComments": true
 	},
 	"include": ["src/"]
 }

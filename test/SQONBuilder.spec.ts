@@ -7,9 +7,9 @@ import SQONBuilder, {
 	FilterOperator,
 	SQON,
 	ScalarFilterKeys,
-} from '../src';
-import reduceSQON from '../src/utils/reduceSQON';
-import { emptySQON } from '../src/SQONBuilder';
+} from '../src/index.js';
+import reduceSQON from '../src/utils/reduceSQON.js';
+import { emptySQON } from '../src/SQONBuilder.js';
 
 describe('SQONBuilder', () => {
 	describe('Root', () => {

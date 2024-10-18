@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import * as Exports from '../src';
+import * as Exports from '../src/index.js';
 
 describe('index', () => {
 	describe('exports', () => {

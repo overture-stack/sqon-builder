@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import filterDuplicates from '../../src/utils/filterDuplicates';
+import filterDuplicates from '../../src/utils/filterDuplicates.js';
 
 describe('utils/filterDuplicates', () => {
 	it('no duplicates - not modified', () => {

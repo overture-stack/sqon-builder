@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import cloneDeepValues from '../../src/utils/cloneDeepValues';
+import cloneDeepValues from '../../src/utils/cloneDeepValues.js';
 
 describe('utils/cloneDeepPojo', () => {
 	it('clones nested objects', () => {

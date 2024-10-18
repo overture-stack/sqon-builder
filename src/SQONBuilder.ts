@@ -18,12 +18,12 @@ import {
 	isArrayFilter,
 	isCombination,
 	isFilter,
-} from './types/sqon';
-import asArray from './utils/asArray';
-import checkMatchingFilter, { checkMatchingArrays } from './utils/checkMatchingFilter';
-import cloneDeepValues from './utils/cloneDeepValues';
-import { createFilter } from './utils/createFilter';
-import reduceSQON from './utils/reduceSQON';
+} from './types/sqon.js';
+import asArray from './utils/asArray.js';
+import checkMatchingFilter, { checkMatchingArrays } from './utils/checkMatchingFilter.js';
+import cloneDeepValues from './utils/cloneDeepValues.js';
+import { createFilter } from './utils/createFilter.js';
+import reduceSQON from './utils/reduceSQON.js';
 
 type SQONBuilder = {
 	and: (content: SQON | SQON[], pivot?: string) => SQONBuilder;
