@@ -9,8 +9,8 @@
 		"dist/"
 	],
 	"scripts": {
-		"build": "rm -rf dist && tsc",
-		"test": "nyc mocha"
+		"build": "rimraf ./dist && tsc -p tsconfig.build.json",
+		"test": "c8 --clean mocha"
 	},
 	"author": "OICR",
 	"license": "AGPL-3.0-or-later",
@@ -29,10 +29,12 @@
 	"devDependencies": {
 		"@types/chai": "^4.3.5",
 		"@types/mocha": "^10.0.1",
-		"chai": "^4.3.7",
+		"c8": "^10.1.2",
+		"chai": "^5",
 		"mocha": "^10.2.0",
-		"nyc": "^15.1.0",
-		"ts-node": "^10.9.1",
+		"nyc": "^17",
+		"rimraf": "^6.0.1",
+		"tsx": "^4.19.1",
 		"typescript": "^5"
 	},
 	"prettier": {
