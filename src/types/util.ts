@@ -22,10 +22,10 @@ export type Keys<T> = T extends infer U ? keyof U : never;
  * type ModelAsConstValues = Values<typeof modelAsConst>; // 'hello' | 100
  * ```
  */
-export type Values<T> = T extends infer U ? U[keyof U] : never;
+export type Values<T> = T[keyof T];
 
 /**
  * Strip out aliases from the TS reported type, to one level.
  * This will display type as an object with key: value pairs instead as an alias name.
  */
-export type Clean<T> = T extends infer U ? { [K in keyof U]: U[K] } : never;
+export type Clean<T> = { [K in keyof T]: T[K] };

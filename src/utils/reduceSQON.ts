@@ -1,13 +1,12 @@
 import {
 	CombinationKeys,
-	CombinationOperator,
 	FilterKeys,
-	FilterOperator,
-	SQON,
-	ScalarFilterKeys,
 	isArrayFilter,
 	isFilter,
-} from '../types/sqon';
+	type CombinationOperator,
+	type FilterOperator,
+	type SQON,
+} from '../types';
 import asArray from './asArray';
 import { createFilter } from './createFilter';
 import filterDuplicates from './filterDuplicates';
