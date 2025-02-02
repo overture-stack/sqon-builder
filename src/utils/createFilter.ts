@@ -3,10 +3,9 @@ import {
 	FilterOperator,
 	FilterTypeMap,
 	isArrayFilterKey,
-	isArrayFilterValue,
 	isScalarFilterKey,
 	isScalarFilterValue,
-} from '../types/sqon';
+} from '../types';
 import asArray from './asArray';
 
 export const createFilter = <Key extends FilterKey>(
@@ -24,5 +23,3 @@ export const createFilter = <Key extends FilterKey>(
 		throw new TypeError(`Cannot assign the value "${value}" to a filter of type "${op}".`);
 	}
 };
-
-createFilter('a', 'in', ['1']);

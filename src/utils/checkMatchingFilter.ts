@@ -1,4 +1,4 @@
-import { FilterOperator, isArrayFilter } from '../types/sqon';
+import { FilterOperator } from '../types';
 import asArray from './asArray';
 import filterDuplicates from './filterDuplicates';
 

@@ -1,4 +1,4 @@
-export * from './types/sqon';
+export * from './types';
 export { default as checkMatchingFilter } from './utils/checkMatchingFilter';
 export { default as reduceSQON } from './utils/reduceSQON';
 export { emptySQON } from './SQONBuilder';

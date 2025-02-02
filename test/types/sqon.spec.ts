@@ -10,7 +10,7 @@ import {
 	isFilter,
 	isScalarFilter,
 	isScalarFilterKey,
-} from '../../src/types/sqon';
+} from '../../src/types';
 
 const combo: CombinationOperator = { op: CombinationKeys.And, content: [] };
 const arrayFilter: FilterOperator = { op: FilterKeys.In, content: { fieldName: 'a', value: ['b', 'c'] } };
@@ -52,10 +52,10 @@ describe('types/sqon', () => {
 				expect(isScalarFilter(scalarFilter)).true;
 			});
 			it('rejects combination operator', () => {
-				expect(isScalarFilter(arrayFilter)).false;
+				expect(isScalarFilter(combo)).false;
 			});
 			it('rejects array filter', () => {
-				expect(isScalarFilter(combo)).false;
+				expect(isScalarFilter(arrayFilter)).false;
 			});
 		});
 		describe('isArrayFilterKey', () => {

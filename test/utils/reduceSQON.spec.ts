@@ -60,7 +60,7 @@ describe('utils/reduceSQON', () => {
 		it('`greaterThan` filters within `and` are combined using max', () => {
 			const filterA: GreaterThanFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 1 } };
 			const filterB: GreaterThanFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 2 } };
-			const filterC: GreaterThanFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 4 } };
+			const filterC: GreaterThanFilter = { op: FilterKeys.GreaterThanSymbol, content: { fieldName: 'num', value: 4 } };
 			const input: SQON = { op: CombinationKeys.And, content: [filterA, filterB, filterC] };
 
 			const expected = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 4 } };
@@ -71,7 +71,7 @@ describe('utils/reduceSQON', () => {
 		});
 		it('`greaterThan` fitlers within `not` are combined using max', () => {
 			const filterA: GreaterThanFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 1 } };
-			const filterB: GreaterThanFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 2 } };
+			const filterB: GreaterThanFilter = { op: FilterKeys.GreaterThanSymbol, content: { fieldName: 'num', value: 2 } };
 			const filterC: GreaterThanFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 4 } };
 			const input: SQON = { op: CombinationKeys.Not, content: [filterA, filterB, filterC] };
 
@@ -85,12 +85,12 @@ describe('utils/reduceSQON', () => {
 			expect(output).deep.equal(expected);
 		});
 		it('`greaterThan` filters within `or` are combined using min', () => {
-			const filterA: GreaterThanFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 1 } };
+			const filterA: GreaterThanFilter = { op: FilterKeys.GreaterThanSymbol, content: { fieldName: 'num', value: 1 } };
 			const filterB: GreaterThanFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 2 } };
 			const filterC: GreaterThanFilter = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 4 } };
 			const input: SQON = { op: CombinationKeys.Or, content: [filterA, filterB, filterC] };
 
-			const expected = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 1 } };
+			const expected = { op: FilterKeys.GreaterThanSymbol, content: { fieldName: 'num', value: 1 } };
 
 			const output = reduceSQON(input);
 
@@ -98,7 +98,7 @@ describe('utils/reduceSQON', () => {
 		});
 		it('`lesserThan` filters within `and` are combined using min', () => {
 			const filterA: LesserThanFilter = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 1 } };
-			const filterB: LesserThanFilter = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 2 } };
+			const filterB: LesserThanFilter = { op: FilterKeys.LesserThanSymbol, content: { fieldName: 'num', value: 2 } };
 			const filterC: LesserThanFilter = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 4 } };
 			const input: SQON = { op: CombinationKeys.And, content: [filterA, filterB, filterC] };
 
@@ -111,7 +111,7 @@ describe('utils/reduceSQON', () => {
 		it('`lesserThan` filters within `not` are combined using min', () => {
 			const filterA: LesserThanFilter = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 1 } };
 			const filterB: LesserThanFilter = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 2 } };
-			const filterC: LesserThanFilter = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 4 } };
+			const filterC: LesserThanFilter = { op: FilterKeys.LesserThanSymbol, content: { fieldName: 'num', value: 4 } };
 			const input: SQON = { op: CombinationKeys.Not, content: [filterA, filterB, filterC] };
 
 			const expected = {
@@ -125,8 +125,8 @@ describe('utils/reduceSQON', () => {
 		});
 		it('`lesserThan` filters within `or` are combined using max', () => {
 			const filterA: LesserThanFilter = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 1 } };
-			const filterB: LesserThanFilter = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 2 } };
-			const filterC: LesserThanFilter = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 4 } };
+			const filterB: LesserThanFilter = { op: FilterKeys.LesserThanSymbol, content: { fieldName: 'num', value: 2 } };
+			const filterC: LesserThanFilter = { op: FilterKeys.LesserThanSymbol, content: { fieldName: 'num', value: 4 } };
 			const input: SQON = { op: CombinationKeys.Or, content: [filterA, filterB, filterC] };
 
 			const expected = { op: FilterKeys.LesserThan, content: { fieldName: 'num', value: 4 } };
@@ -165,7 +165,7 @@ describe('utils/reduceSQON', () => {
 		});
 		it('nested `and` combinations are removed', () => {
 			const filterA: FilterOperator = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Sue'] } };
-			const filterB: FilterOperator = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 2 } };
+			const filterB: FilterOperator = { op: FilterKeys.GreaterThanSymbol, content: { fieldName: 'num', value: 2 } };
 			const filterC: FilterOperator = { op: FilterKeys.LesserThan, content: { fieldName: 'score', value: 10 } };
 			const comboA: CombinationOperator = { op: CombinationKeys.And, content: [filterA, filterB] };
 			const comboB: CombinationOperator = { op: CombinationKeys.And, content: [filterC] };
@@ -176,7 +176,7 @@ describe('utils/reduceSQON', () => {
 		it('nested `or` combinations are removed', () => {
 			const filterA: FilterOperator = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Sue'] } };
 			const filterB: FilterOperator = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 2 } };
-			const filterC: FilterOperator = { op: FilterKeys.LesserThan, content: { fieldName: 'score', value: 10 } };
+			const filterC: FilterOperator = { op: FilterKeys.LesserThanSymbol, content: { fieldName: 'score', value: 10 } };
 			const comboA: CombinationOperator = { op: CombinationKeys.Or, content: [filterA, filterB] };
 			const comboB: CombinationOperator = { op: CombinationKeys.Or, content: [filterC] };
 			const input: CombinationOperator = { op: CombinationKeys.Or, content: [comboA, comboB] };
@@ -187,7 +187,7 @@ describe('utils/reduceSQON', () => {
 			// Not optimal behaviour, but simplest way to not introduce errors with negation
 			const filterA: FilterOperator = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Sue'] } };
 			const filterB: FilterOperator = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 2 } };
-			const filterC: FilterOperator = { op: FilterKeys.LesserThan, content: { fieldName: 'score', value: 10 } };
+			const filterC: FilterOperator = { op: FilterKeys.LesserThanSymbol, content: { fieldName: 'score', value: 10 } };
 			const comboA: CombinationOperator = { op: CombinationKeys.Not, content: [filterA, filterB] };
 			const comboB: CombinationOperator = { op: CombinationKeys.Not, content: [filterC] };
 			const input: CombinationOperator = { op: CombinationKeys.Not, content: [comboA, comboB] };
@@ -233,7 +233,7 @@ describe('utils/reduceSQON', () => {
 		it('does not combine operators with different pivots', () => {
 			const filterA: FilterOperator = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Sue'] } };
 			const filterB: FilterOperator = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 2 } };
-			const filterC: FilterOperator = { op: FilterKeys.LesserThan, content: { fieldName: 'score', value: 10 } };
+			const filterC: FilterOperator = { op: FilterKeys.LesserThanSymbol, content: { fieldName: 'score', value: 10 } };
 			const comboA: CombinationOperator = { op: CombinationKeys.And, content: [filterA, filterB], pivot: 'pilot' };
 			const comboB: CombinationOperator = { op: CombinationKeys.And, content: [filterC], pivot: 'actor' };
 			const input: CombinationOperator = { op: CombinationKeys.And, content: [comboA, comboB], pivot: 'doctor' };
@@ -244,8 +244,8 @@ describe('utils/reduceSQON', () => {
 		});
 		it('combines operators with same pivots', () => {
 			const filterA: FilterOperator = { op: FilterKeys.In, content: { fieldName: 'name', value: ['Jim', 'Sue'] } };
-			const filterB: FilterOperator = { op: FilterKeys.GreaterThan, content: { fieldName: 'num', value: 2 } };
-			const filterC: FilterOperator = { op: FilterKeys.LesserThan, content: { fieldName: 'score', value: 10 } };
+			const filterB: FilterOperator = { op: FilterKeys.GreaterThanSymbol, content: { fieldName: 'num', value: 2 } };
+			const filterC: FilterOperator = { op: FilterKeys.LesserThanSymbol, content: { fieldName: 'score', value: 10 } };
 			const comboA: CombinationOperator = { op: CombinationKeys.And, content: [filterA, filterB], pivot: 'user' };
 			const comboB: CombinationOperator = { op: CombinationKeys.And, content: [filterC], pivot: 'user' };
 			const input: CombinationOperator = { op: CombinationKeys.And, content: [comboA, comboB], pivot: 'user' };

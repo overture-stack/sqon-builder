@@ -1,8 +1,11 @@
 import {
 	CombinationKeys,
 	FilterKeys,
+	GreaterThanFilter,
+	InFilter,
 	isArrayFilter,
 	isFilter,
+	LesserThanFilter,
 	type CombinationOperator,
 	type FilterOperator,
 	type SQON,
@@ -10,6 +13,8 @@ import {
 import asArray from './asArray';
 import { createFilter } from './createFilter';
 import filterDuplicates from './filterDuplicates';
+import { isSameFilter } from './isSameFilter';
+import { matchesSchema } from './matchesSchema';
 /**
  * For an ArrayFilter, remove duplicate entries from the array of values.
  * @param filter
@@ -46,9 +51,12 @@ const reduceSQON = (sqon: SQON): SQON => {
 		for (const innerSqon of sqon.content) {
 			// Filters are added to output content
 			if (isFilter(innerSqon)) {
-				// Check for duplicate filter in this operator
+				// Check for duplicate filter already stored in our output operator
 				const match = output.content.find(
-					(content) => content.op === innerSqon.op && content.content.fieldName === innerSqon.content.fieldName,
+					(content) =>
+						isFilter(content) &&
+						isSameFilter(content, innerSqon) &&
+						content.content.fieldName === innerSqon.content.fieldName,
 				);
 				if (match !== undefined) {
 					/**
@@ -60,7 +68,7 @@ const reduceSQON = (sqon: SQON): SQON => {
 					 * - 5. multiple IN on the same 'or' combo can be combined into a single list
 					 */
 					// In this if/else chain we check both the match and the innersqon match. we know this is true thanks to the .find that found the match, but this is needed for the type checker
-					if (match.op === FilterKeys.GreaterThan && innerSqon.op === FilterKeys.GreaterThan) {
+					if (matchesSchema(GreaterThanFilter, match) && matchesSchema(GreaterThanFilter, innerSqon)) {
 						if (output.op === CombinationKeys.And || output.op === CombinationKeys.Not) {
 							// 1. multiple GT on the same 'and'/'not' combo can be a single with the greater value
 							match.content.value = Math.max(match.content.value, innerSqon.content.value);
@@ -70,7 +78,7 @@ const reduceSQON = (sqon: SQON): SQON => {
 						}
 					}
 
-					if (match.op === FilterKeys.LesserThan && innerSqon.op === FilterKeys.LesserThan) {
+					if (matchesSchema(LesserThanFilter, match) && matchesSchema(LesserThanFilter, innerSqon)) {
 						if (output.op === CombinationKeys.And || output.op === CombinationKeys.Not) {
 							// 3. multiple LT on the same 'and'/'not' combo can be the lesser value
 							match.content.value = Math.min(match.content.value, innerSqon.content.value);
@@ -80,7 +88,7 @@ const reduceSQON = (sqon: SQON): SQON => {
 						}
 					}
 
-					if (match.op === FilterKeys.In && innerSqon.op === FilterKeys.In) {
+					if (matchesSchema(InFilter, match) && matchesSchema(InFilter, innerSqon)) {
 						if (output.op === CombinationKeys.Or) {
 							// 5. multiple IN on the same 'or' combo can be combined into a list
 							match.content.value = [...asArray(match.content.value), ...asArray(innerSqon.content.value)];
